@@ -8,26 +8,27 @@
     <style>
         body { background-color: #0d1117; color: white; font-family: sans-serif; text-align: center; margin: 0; padding: 10px; padding-bottom: 90px; }
         .header-block { display: flex; align-items: center; justify-content: center; gap: 12px; margin: 10px 0 20px 0; }
-        .logo-img { height: 45px; width: 45px; border-radius: 50%; border: 2px solid #ffcc00; box-shadow: 0 0 10px rgba(255, 204, 0, 0.3); }
-        h1 { color: #ffcc00; text-shadow: 0 0 15px rgba(255, 204, 0, 0.5); margin: 0; font-size: 24px; letter-spacing: 1px; }
+        .logo-img { height: 45px; width: 45px; border-radius: 50%; border: 2px solid #ffcc00; }
+        h1 { color: #ffcc00; text-shadow: 0 0 15px rgba(255, 204, 0, 0.5); margin: 0; font-size: 24px; }
 
         .extra-buttons { display: flex; gap: 10px; justify-content: center; margin-bottom: 25px; }
-        .ext-btn { background: #1e293b; color: white; border: 1px solid #334155; padding: 12px 15px; border-radius: 15px; font-size: 13px; cursor: pointer; text-decoration: none; font-weight: bold; flex: 1; max-width: 150px; transition: 0.3s; }
-        .ext-btn.buy { background: #007aff; border-color: #007aff; box-shadow: 0 4px 15px rgba(0, 122, 255, 0.3); }
-        .ext-btn:active { transform: scale(0.95); }
+        .ext-btn { background: #1e293b; color: white; border: 1px solid #334155; padding: 12px 15px; border-radius: 15px; font-size: 13px; cursor: pointer; text-decoration: none; font-weight: bold; flex: 1; max-width: 150px; }
+        .ext-btn.buy { background: #007aff; border-color: #007aff; }
 
         .ticket-container { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; max-width: 340px; margin: 15px auto; }
-        .ticket { background: #1e293b; border: 2px solid #334155; height: 85px; border-radius: 18px; display: flex; align-items: center; justify-content: center; font-size: 26px; cursor: pointer; position: relative; transition: 0.2s; }
-        .ticket.open { background: linear-gradient(135deg, #f59e0b, #d97706); border-color: #ffcc00; color: white; font-weight: bold; pointer-events: none; transform: rotate(-2deg); }
-        .ticket.open::after { content: "✅"; position: absolute; font-size: 12px; top: 5px; right: 8px; }
+        .ticket { background: #1e293b; border: 2px solid #334155; height: 85px; border-radius: 18px; display: flex; align-items: center; justify-content: center; font-size: 26px; cursor: pointer; position: relative; }
+        .ticket.open { background: linear-gradient(135deg, #f59e0b, #d97706); border-color: #ffcc00; color: white; font-weight: bold; pointer-events: none; }
         
-        #payment-modal { display: none; background: #1f2937; padding: 25px; border-radius: 25px; border: 2px solid #ffcc00; margin: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        /* Модальні вікна */
+        .modal { display: none; background: #1f2937; padding: 25px; border-radius: 25px; border: 2px solid #ffcc00; margin: 10px; position: relative; z-index: 50; }
         .wallet-box { background: #0d1117; color: #10b981; padding: 18px; border-radius: 15px; font-size: 12px; word-break: break-all; margin: 20px 0; border: 1px dashed #10b981; cursor: pointer; font-weight: bold; }
         .back-btn { background: #334155; color: white; border: none; padding: 15px; border-radius: 15px; font-size: 15px; cursor: pointer; width: 100%; font-weight: bold; }
         
+        .rules-text { text-align: left; font-size: 14px; line-height: 1.6; color: #cbd5e1; }
+        .rules-text b { color: #ffcc00; }
+
         #admin-panel { display: none; position: fixed; bottom: 0; left: 0; width: 100%; background: rgba(13, 17, 23, 0.95); padding: 15px 0; border-top: 1px solid #334155; z-index: 100; }
         .admin-reset { color: #94a3b8; font-size: 12px; background: #1e293b; border: 1px solid #334155; padding: 10px 25px; border-radius: 20px; cursor: pointer; }
-
         #music-control { color: #64748b; font-size: 12px; margin-top: 25px; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; padding: 8px 15px; border-radius: 20px; background: #1e293b; }
     </style>
 </head>
@@ -45,23 +46,35 @@
     <div id="game-zone">
         <div class="extra-buttons">
             <a href="https://app.ston.fi/swap?ft=TON&tt=EQBrD-UZ8w2tAyxCNjO8lF4ioTwI-ELiQgF7kclC7gM2UOO_" target="_blank" class="ext-btn buy">💎 Купити UA</a>
-            <a href="https://t.me/Leslav2025" target="_blank" class="ext-btn">📜 Правила</a>
+            <div onclick="showRules()" class="ext-btn">📜 Правила</div>
         </div>
-
         <p style="color: #94a3b8; margin-bottom: 15px;">Оберіть щасливий квиток 👇</p>
         <div class="ticket-container" id="grid"></div>
-        
         <div id="music-control" onclick="toggleMusic()">🎵 Увімкнути музику</div>
     </div>
 
-    <div id="payment-modal">
-        <h3 style="margin:0; color: #ffcc00;">✅ Квиток заброньовано!</h3>
-        <p style="font-size: 14px;">Натисніть на адресу, щоб скопіювати:</p>
+    <div id="rules-modal" class="modal">
+        <h3 style="color: #ffcc00; margin-top: 0;">📜 Правила гри</h3>
+        <div class="rules-text">
+            1. Гра проводиться виключно в токені <b>UA</b>. <br>
+            2. Вартість одного квитка — <b>100 UA</b>. <br>
+            3. Після вибору квитка та броні, у вас є 15 хвилин на оплату. <br>
+            4. Обов'язково надішліть скріншот оплати адміністратору: <b>@Leslav2025</b>. <br>
+            5. Розіграш відбувається після заповнення всіх квитків. <br>
+            6. Переможець обирається рандомно та отримує приз на свій гаманець!
+        </div>
+        <br>
+        <button class="back-btn" onclick="closeModals()">ЗРОЗУМІЛО ✅</button>
+    </div>
+
+    <div id="payment-modal" class="modal">
+        <h3 style="margin:0; color: #ffcc00;">✅ Бронювання квитка</h3>
+        <p style="font-size: 14px;">Скопіюйте адресу для оплати <b>100 UA</b>:</p>
         <div class="wallet-box" id="walletDisplay" onclick="copyWallet()">
             UQDXq1iAqu88tVRG62_k03kAXELu_1gzRBMye-VZoFRIRtWw
         </div>
-        <button class="back-btn" onclick="goBack()">⬅️ ПОВЕРНУТИСЬ</button>
-        <p style="font-size:12px; color: #94a3b8; margin-top:15px;">Після оплати надішліть скріншот <b>@Leslav</b></p>
+        <button class="back-btn" onclick="closeModals()">⬅️ ПОВЕРНУТИСЬ</button>
+        <p style="font-size:12px; color: #94a3b8; margin-top:15px;">Скріншот сюди 👉 <b>@Leslav2025</b></p>
     </div>
 
     <div id="admin-panel">
@@ -71,7 +84,6 @@
 <script>
     const tg = window.Telegram.WebApp;
     tg.expand();
-    
     const ADMIN_ID = 409059054;
     const MY_WALLET = "UQDXq1iAqu88tVRG62_k03kAXELu_1gzRBMye-VZoFRIRtWw";
 
@@ -94,9 +106,7 @@
 
     function choose(num, el) {
         if(el.classList.contains('open')) return;
-        const amount = prompt("Квиток №" + num + "\nСума (UA):", "100");
-        if (!amount) return;
-        const userW = prompt("Ваш гаманець для виплати:");
+        const userW = prompt("Ваш гаманець для отримання призу:");
         if (!userW) return;
 
         let boughtTickets = JSON.parse(localStorage.getItem('boughtTickets') || '[]');
@@ -108,12 +118,23 @@
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ 
                 chat_id: "-1001451233135", 
-                text: `🎰 НОВА ЗАЯВКА\n🎫 Квиток: №${num}\n👤 Гравець: ${tg.initDataUnsafe?.user?.first_name || "Гість"}\n💰 Сума: ${amount} UA\n💳 Виплата на: ${userW}` 
+                text: `🎰 ЗАЯВКА\n🎫 Квиток: №${num}\n👤: ${tg.initDataUnsafe?.user?.first_name || "Гість"}\n💳 Виплата: ${userW}` 
             })
         }).then(() => {
             document.getElementById('game-zone').style.display = 'none';
             document.getElementById('payment-modal').style.display = 'block';
         });
+    }
+
+    function showRules() {
+        document.getElementById('game-zone').style.display = 'none';
+        document.getElementById('rules-modal').style.display = 'block';
+    }
+
+    function closeModals() {
+        document.querySelectorAll('.modal').forEach(m => m.style.display = 'none');
+        document.getElementById('game-zone').style.display = 'block';
+        createTickets();
     }
 
     function copyWallet() {
@@ -124,18 +145,12 @@
         document.execCommand('copy');
         document.body.removeChild(el);
         const box = document.getElementById('walletDisplay');
-        box.innerText = "✅ СКОПІЙОВАНО!";
+        box.innerText = "✅ АДРЕСУ СКОПІЙОВАНО!";
         setTimeout(() => { box.innerText = MY_WALLET; }, 1500);
     }
 
-    function goBack() {
-        document.getElementById('payment-modal').style.display = 'none';
-        document.getElementById('game-zone').style.display = 'block';
-        createTickets();
-    }
-
     function resetGame() {
-        if(confirm("Очистити всі квитки та почати новий раунд?")) {
+        if(confirm("Очистити поле?")) {
             localStorage.removeItem('boughtTickets');
             createTickets();
         }
@@ -144,18 +159,11 @@
     const music = document.getElementById('bg-music');
     const control = document.getElementById('music-control');
     let isPlaying = false;
-
     function toggleMusic() {
-        if (isPlaying) {
-            music.pause();
-            control.innerText = "🎵 Увімкнути музику";
-        } else {
-            music.play();
-            control.innerText = "⏸ Вимкнути музику";
-        }
+        if (isPlaying) { music.pause(); control.innerText = "🎵 Увімкнути музику"; } 
+        else { music.play(); control.innerText = "⏸ Вимкнути музику"; }
         isPlaying = !isPlaying;
     }
-
     createTickets();
 </script>
 </body>
