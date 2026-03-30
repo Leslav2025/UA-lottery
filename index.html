@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UA LOTTERY</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body { background: #0d1117; color: white; font-family: sans-serif; text-align: center; padding: 20px; }
+        .card { background: #1f2937; padding: 20px; border-radius: 20px; border: 2px solid #ffcc00; margin: 20px 0; }
+        .btn { background: #f59e0b; color: white; border: none; padding: 15px 30px; border-radius: 50px; font-size: 20px; font-weight: bold; width: 100%; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>UA LOTTERY 🎰</h1>
+    <div class="card">
+        <p>Розіграш кожні <b>5 гравців</b></p>
+        <p>Приз: <b>80% банку</b></p>
+    </div>
+    <button class="btn" onclick="buy()">КУПИТИ КВИТОК</button>
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+        function buy() {
+            const sum = prompt("Сума (від 100 UA):");
+            if (!sum || sum < 100) return;
+            const wallet = prompt("Ваш гаманець:");
+            if (!wallet) return;
+            const msg = `🎫 ЛОТЕРЕЯ\n👤: ${tg.initDataUnsafe?.user?.first_name || "Гравець"}\n💰: ${sum} UA\n💳: ${wallet}`;
+            fetch(`https://api.telegram.org/bot6584194059:AAHLZe58364vvTd_vLTIpdW98mazceu-NIc/sendMessage`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ chat_id: "-1001451233135", text: msg })
+            }).then(() => alert("Заявку надіслано!"));
+        }
+    </script>
+</body>
+</html>
