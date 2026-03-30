@@ -6,29 +6,32 @@
     <title>UA LOTTERY 🎰</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        body { background-color: #0d1117; color: white; font-family: sans-serif; text-align: center; margin: 0; padding: 20px; }
-        h1 { color: #ffcc00; text-shadow: 0 0 15px rgba(255, 204, 0, 0.5); }
-        .ticket-container { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; max-width: 320px; margin: 20px auto; }
-        .ticket { background: #1e293b; border: 2px solid #475569; height: 80px; border-radius: 15px; display: flex; align-items: center; justify-content: center; font-size: 24px; cursor: pointer; transition: 0.3s; position: relative; }
+        body { background-color: #0d1117; color: white; font-family: sans-serif; text-align: center; margin: 0; padding: 10px; padding-bottom: 80px; }
+        h1 { color: #ffcc00; text-shadow: 0 0 15px rgba(255, 204, 0, 0.5); margin-bottom: 5px; }
+        .ticket-container { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; max-width: 320px; margin: 10px auto; }
+        .ticket { background: #1e293b; border: 2px solid #475569; height: 80px; border-radius: 15px; display: flex; align-items: center; justify-content: center; font-size: 24px; cursor: pointer; position: relative; }
         .ticket.open { background: #f59e0b; border-color: #ffcc00; color: white; font-weight: bold; pointer-events: none; }
         .ticket.open::after { content: "✅"; position: absolute; font-size: 12px; top: 5px; right: 8px; }
-        #payment-modal { display: none; background: #1f2937; padding: 20px; border-radius: 20px; border: 2px solid #ffcc00; margin-top: 20px; }
+        
+        #payment-modal { display: none; background: #1f2937; padding: 20px; border-radius: 20px; border: 2px solid #ffcc00; margin-top: 10px; }
         .wallet-box { background: #0d1117; color: #10b981; padding: 15px; border-radius: 12px; font-size: 11px; word-break: break-all; margin: 15px 0; border: 2px solid #10b981; cursor: pointer; font-weight: bold; }
-        .back-btn { background: #334155; color: white; border: none; padding: 12px; border-radius: 10px; font-size: 14px; cursor: pointer; width: 100%; font-weight: bold; margin-top: 10px; }
-        .admin-section { margin-top: 60px; padding-top: 20px; border-top: 1px solid #1e293b; }
-        .admin-reset { color: #475569; font-size: 11px; background: none; border: 1px solid #1e293b; padding: 5px 10px; border-radius: 5px; cursor: pointer; }
+        .back-btn { background: #334155; color: white; border: none; padding: 12px; border-radius: 10px; font-size: 14px; cursor: pointer; width: 100%; font-weight: bold; }
+        
+        /* Кнопка адміна зафіксована внизу */
+        .admin-bar { position: fixed; bottom: 0; left: 0; width: 100%; background: rgba(13, 17, 23, 0.9); padding: 15px 0; border-top: 1px solid #1e293b; }
+        .admin-reset { color: #475569; font-size: 12px; background: #1e293b; border: 1px solid #334155; padding: 8px 20px; border-radius: 20px; cursor: pointer; }
     </style>
 </head>
 <body>
     <h1>UA LOTTERY 🎰</h1>
     <div id="game-zone">
-        <p>Оберіть свій <b>квиток</b> 👇</p>
+        <p style="margin-top:0">Оберіть свій <b>квиток</b> 👇</p>
         <div class="ticket-container" id="grid"></div>
     </div>
 
     <div id="payment-modal">
         <h3 style="margin:0">✅ Заброньовано!</h3>
-        <p>Натисніть для <b>копіювання</b> гаманця:</p>
+        <p>Натисніть для <b>копіювання</b>:</p>
         <div class="wallet-box" id="walletDisplay" onclick="copyWallet()">
             UQDXq1iAqu88tVRG62_k03kAXELu_1gzRBMye-VZoFRIRtWw
         </div>
@@ -36,8 +39,8 @@
         <p style="font-size:12px; color: #94a3b8; margin-top:15px;">Після оплати надішліть скріншот <b>@Leslav</b></p>
     </div>
 
-    <div class="admin-section">
-        <button class="admin-reset" onclick="resetGame()">🔧 Адмін: Новий раунд</button>
+    <div class="admin-bar">
+        <button class="admin-reset" onclick="resetGame()">🔧 Адмін: Новий раунд (очистити)</button>
     </div>
 
 <script>
@@ -86,7 +89,6 @@
         el.select();
         document.execCommand('copy');
         document.body.removeChild(el);
-        
         const box = document.getElementById('walletDisplay');
         box.innerText = "✅ СКОПІЙОВАНО!";
         setTimeout(() => { box.innerText = MY_WALLET; }, 1500);
@@ -99,13 +101,11 @@
     }
 
     function resetGame() {
-        if(confirm("Очистити всі квитки та почати новий раунд?")) {
+        if(confirm("Очистити всі квитки для нового раунду?")) {
             localStorage.removeItem('boughtTickets');
             createTickets();
-            alert("Гру очищено!");
         }
     }
-
     createTickets();
 </script>
 </body>
