@@ -9,41 +9,54 @@
         body { background-color: #0d1117; color: white; font-family: sans-serif; text-align: center; margin: 0; padding: 20px; }
         h1 { color: #ffcc00; text-shadow: 0 0 15px rgba(255, 204, 0, 0.5); }
         .ticket-container { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; max-width: 320px; margin: 20px auto; }
-        .ticket { background: #1e293b; border: 2px solid #475569; height: 80px; border-radius: 15px; display: flex; align-items: center; justify-content: center; font-size: 24px; cursor: pointer; transition: 0.3s; }
-        .ticket.open { background: #f59e0b; border-color: #ffcc00; color: white; font-weight: bold; }
+        .ticket { background: #1e293b; border: 2px solid #475569; height: 80px; border-radius: 15px; display: flex; align-items: center; justify-content: center; font-size: 24px; cursor: pointer; transition: 0.3s; position: relative; }
+        .ticket.open { background: #f59e0b; border-color: #ffcc00; color: white; font-weight: bold; pointer-events: none; }
+        .ticket.open::after { content: "✅"; position: absolute; font-size: 12px; top: 5px; right: 8px; }
         #payment-modal { display: none; background: #1f2937; padding: 20px; border-radius: 20px; border: 2px solid #ffcc00; margin-top: 20px; }
         .wallet-box { background: #0d1117; color: #10b981; padding: 15px; border-radius: 12px; font-size: 11px; word-break: break-all; margin: 15px 0; border: 2px solid #10b981; cursor: pointer; font-weight: bold; }
         .back-btn { background: #334155; color: white; border: none; padding: 12px; border-radius: 10px; font-size: 14px; cursor: pointer; width: 100%; font-weight: bold; margin-top: 10px; }
+        .admin-section { margin-top: 60px; padding-top: 20px; border-top: 1px solid #1e293b; }
+        .admin-reset { color: #475569; font-size: 11px; background: none; border: 1px solid #1e293b; padding: 5px 10px; border-radius: 5px; cursor: pointer; }
     </style>
 </head>
 <body>
     <h1>UA LOTTERY 🎰</h1>
     <div id="game-zone">
         <p>Оберіть свій <b>квиток</b> 👇</p>
-        <div class="ticket-container">
-            <div class="ticket" onclick="choose(1, this)">?</div>
-            <div class="ticket" onclick="choose(2, this)">?</div>
-            <div class="ticket" onclick="choose(3, this)">?</div>
-            <div class="ticket" onclick="choose(4, this)">?</div>
-            <div class="ticket" onclick="choose(5, this)">?</div>
-            <div class="ticket" onclick="choose(6, this)">?</div>
-        </div>
+        <div class="ticket-container" id="grid"></div>
     </div>
 
     <div id="payment-modal">
-        <h3 style="margin:0">✅ Квиток обрано!</h3>
-        <p>Натисніть на номер для <b>копіювання</b>:</p>
-        <div class="wallet-box" id="walletDisplay" onclick="copyToClipboard()">
+        <h3 style="margin:0">✅ Заброньовано!</h3>
+        <p>Натисніть для <b>копіювання</b> гаманця:</p>
+        <div class="wallet-box" id="walletDisplay" onclick="copyWallet()">
             UQDXq1iAqu88tVRG62_k03kAXELu_1gzRBMye-VZoFRIRtWw
         </div>
         <button class="back-btn" onclick="goBack()">⬅️ ПОВЕРНУТИСЬ ДО ГРИ</button>
-        <p style="font-size:12px; color: #94a3b8; margin-top:15px;">Після оплати надішліть скріншот @Leslav2025</p>
+        <p style="font-size:12px; color: #94a3b8; margin-top:15px;">Після оплати надішліть скріншот <b>@Leslav</b></p>
+    </div>
+
+    <div class="admin-section">
+        <button class="admin-reset" onclick="resetGame()">🔧 Адмін: Новий раунд</button>
     </div>
 
 <script>
     const tg = window.Telegram.WebApp;
     tg.expand();
     const MY_WALLET = "UQDXq1iAqu88tVRG62_k03kAXELu_1gzRBMye-VZoFRIRtWw";
+    
+    function createTickets() {
+        const grid = document.getElementById('grid');
+        const boughtTickets = JSON.parse(localStorage.getItem('boughtTickets') || '[]');
+        grid.innerHTML = '';
+        for (let i = 1; i <= 6; i++) {
+            const div = document.createElement('div');
+            div.className = 'ticket' + (boughtTickets.includes(i) ? ' open' : '');
+            div.innerText = boughtTickets.includes(i) ? "№" + i : "?";
+            div.onclick = () => choose(i, div);
+            grid.appendChild(div);
+        }
+    }
 
     function choose(num, el) {
         if(el.classList.contains('open')) return;
@@ -51,34 +64,49 @@
         if (!amount) return;
         const userW = prompt("Ваш гаманець для виплати:");
         if (!userW) return;
-        el.classList.add('open');
-        el.innerText = "№" + num;
+
+        let boughtTickets = JSON.parse(localStorage.getItem('boughtTickets') || '[]');
+        boughtTickets.push(num);
+        localStorage.setItem('boughtTickets', JSON.stringify(boughtTickets));
+
         fetch(`https://api.telegram.org/bot6584194059:AAHLZe58364vvTd_vLTIpdW98mazceu-NIc/sendMessage`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ chat_id: "-1001451233135", text: `🎰 КВИТОК №${num}\n👤: ${tg.initDataUnsafe?.user?.first_name || "Гість"}\n💰: ${amount} UA\n💳: ${userW}` })
+            body: JSON.stringify({ chat_id: "-1001451233135", text: `🎰 НОВА ЗАЯВКА\n🎫 Квиток: №${num}\n👤: ${tg.initDataUnsafe?.user?.first_name || "Гість"}\n💰: ${amount} UA\n💳: ${userW}` })
         }).then(() => {
             document.getElementById('game-zone').style.display = 'none';
             document.getElementById('payment-modal').style.display = 'block';
         });
     }
 
-    function copyToClipboard() {
-        const area = document.createElement('textarea');
-        area.value = MY_WALLET;
-        document.body.appendChild(area);
-        area.select();
+    function copyWallet() {
+        const el = document.createElement('textarea');
+        el.value = MY_WALLET;
+        document.body.appendChild(el);
+        el.select();
         document.execCommand('copy');
-        document.body.removeChild(area);
+        document.body.removeChild(el);
+        
         const box = document.getElementById('walletDisplay');
-        box.innerText = "СКОПІЙОВАНО!";
-        setTimeout(() => { box.innerText = MY_WALLET; }, 2000);
+        box.innerText = "✅ СКОПІЙОВАНО!";
+        setTimeout(() => { box.innerText = MY_WALLET; }, 1500);
     }
 
     function goBack() {
         document.getElementById('payment-modal').style.display = 'none';
         document.getElementById('game-zone').style.display = 'block';
+        createTickets();
     }
+
+    function resetGame() {
+        if(confirm("Очистити всі квитки та почати новий раунд?")) {
+            localStorage.removeItem('boughtTickets');
+            createTickets();
+            alert("Гру очищено!");
+        }
+    }
+
+    createTickets();
 </script>
 </body>
 </html>
