@@ -12,8 +12,8 @@
         .logo-img { height: 50px; width: 50px; border-radius: 50%; border: 2px solid var(--accent); }
         h1 { color: var(--accent); margin: 0; font-size: 26px; text-transform: uppercase; }
         .ticket-container { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; max-width: 340px; margin: 20px auto; }
-        .ticket { background: var(--card); border: 2px solid #334155; height: 90px; border-radius: 20px; display: flex; align-items: center; justify-content: center; font-size: 28px; cursor: pointer; transition: 0.2s; }
-        .ticket.open { background: linear-gradient(135deg, #f59e0b, #d97706); border-color: var(--accent); pointer-events: none; }
+        .ticket { background: var(--card); border: 2px solid #334155; height: 90px; border-radius: 20px; display: flex; align-items: center; justify-content: center; font-size: 28px; cursor: pointer; }
+        .ticket.open { background: linear-gradient(135deg, #f59e0b, #d97706); border-color: var(--accent); pointer-events: none; opacity: 0.8; }
         .btn-rules { background: none; border: 1px solid #334155; color: #94a3b8; padding: 10px 20px; border-radius: 20px; cursor: pointer; margin-top: 20px; }
         #admin-panel { display: none; margin-top: 30px; border-top: 1px solid #334155; padding-top: 10px; }
     </style>
@@ -29,7 +29,7 @@
     
     <div class="ticket-container" id="grid"></div>
 
-    <button class="btn-rules" onclick="tg.showAlert('Надішліть 100 UA на гаманець лотереї. Після перевірки транзакції квиток буде заброньовано!')">📜 Правила</button>
+    <button class="btn-rules" onclick="tg.showAlert('Скопіюйте адресу, відкрийте свій гаманець (Wallet або Tonkeeper) і надішліть 100 UA. Після оплати квиток буде активовано!')">📜 Правила</button>
 
     <div id="admin-panel">
         <button onclick="localStorage.removeItem('boughtTickets'); location.reload();" style="color:red; background:none; border:none; font-size:12px;">🔧 Скинути гру</button>
@@ -59,29 +59,32 @@
     function handleTicket(num, isOpened) {
         if (isOpened) return;
 
-        // Копіюємо адресу
-        const input = document.createElement('input');
-        input.value = MY_WALLET;
-        document.body.appendChild(input);
-        input.select();
-        document.execCommand('copy');
-        document.body.removeChild(input);
+        // Копіювання через сучасний API або старий метод
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(MY_WALLET);
+        } else {
+            const input = document.createElement('input');
+            input.value = MY_WALLET;
+            document.body.appendChild(input);
+            input.select();
+            document.execCommand('copy');
+            document.body.removeChild(input);
+        }
 
         tg.showPopup({
-            title: 'Оплата квитка №' + num,
-            message: 'Адресу гаманця скопійовано!\n\nВідкрийте Wallet, оберіть токен UA та надішліть 100 одиниць.',
+            title: 'Квиток №' + num,
+            message: 'Адресу гаманця скопійовано!\n\nТепер відкрийте ваш Wallet, оберіть UA та надішліть 100 одиниць.',
             buttons: [
-                {id: 'ok', type: 'default', text: 'ВІДКРИТИ ГАМАНЕЦЬ'},
+                {id: 'link', type: 'default', text: 'ПЕРЕЙТИ ДО ОПЛАТИ'},
                 {type: 'cancel', text: 'СКАСУВАТИ'}
             ]
         }, (id) => {
-            if (id === 'ok') {
-                // Відкриваємо гаманець
-                window.location.href = "ton://transfer/" + MY_WALLET;
+            if (id === 'link') {
+                // Використовуємо офіційне посилання Telegram для Wallet, щоб уникнути помилки схеми
+                tg.openTelegramLink("https://t.me/wallet");
                 
-                // Шлемо заявку вам в канал
                 const user = tg.initDataUnsafe?.user;
-                const text = `⏳ **ЗАЯВКА НА КВИТОК №${num}**\n👤 Гравець: ${user?.first_name || 'Гість'}\n🆔 ID: ${user?.id || 'немає'}\n\nКористувач копірнув адресу і пішов платити 100 UA.`;
+                const text = `⏳ **НОВА ЗАЯВКА**\n🎫 Квиток: №${num}\n👤 Гравець: ${user?.first_name || 'Гість'}\n🆔 ID: ${user?.id || 'немає'}\n\nКористувач скопіював адресу і перейшов у Wallet.`;
                 
                 fetch(`https://api.telegram.org/bot6584194059:AAHLZe58364vvTd_vLTIpdW98mazceu-NIc/sendMessage`, {
                     method: 'POST',
@@ -89,7 +92,6 @@
                     body: JSON.stringify({ chat_id: "-1001451233135", text: text, parse_mode: "Markdown" })
                 });
 
-                // Позначаємо як куплений (для тесту)
                 let bought = JSON.parse(localStorage.getItem('boughtTickets') || '[]');
                 bought.push(num);
                 localStorage.setItem('boughtTickets', JSON.stringify(bought));
