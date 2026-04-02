@@ -5,165 +5,139 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>UA LOTTERY 🎰</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://unpkg.com/@tonconnect/ui@latest/dist/tonconnect-ui.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tonweb/0.0.66/tonweb.min.js"></script>
     <style>
-        body { background-color: #0d1117; color: white; font-family: sans-serif; text-align: center; margin: 0; padding: 10px; padding-bottom: 90px; }
-        .header-block { display: flex; align-items: center; justify-content: center; gap: 12px; margin: 10px 0 20px 0; }
-        .logo-img { height: 45px; width: 45px; border-radius: 50%; border: 2px solid #ffcc00; }
-        h1 { color: #ffcc00; text-shadow: 0 0 15px rgba(255, 204, 0, 0.5); margin: 0; font-size: 24px; }
-
-        .extra-buttons { display: flex; gap: 10px; justify-content: center; margin-bottom: 25px; }
-        .ext-btn { background: #1e293b; color: white; border: 1px solid #334155; padding: 12px 15px; border-radius: 15px; font-size: 13px; cursor: pointer; text-decoration: none; font-weight: bold; flex: 1; max-width: 150px; }
-        .ext-btn.buy { background: #007aff; border-color: #007aff; }
-
+        :root { --accent: #ffcc00; --bg: #0d1117; --card: #1e293b; --text: white; }
+        body { background-color: var(--bg); color: var(--text); font-family: sans-serif; text-align: center; margin: 0; padding: 15px; }
+        .header-block { display: flex; align-items: center; justify-content: center; gap: 12px; margin: 10px 0 20px; }
+        .logo-img { height: 45px; width: 45px; border-radius: 50%; border: 2px solid var(--accent); }
+        h1 { color: var(--accent); text-shadow: 0 0 15px rgba(255, 204, 0, 0.5); margin: 0; font-size: 24px; }
+        #ton-connect { display: flex; justify-content: center; margin-bottom: 20px; }
         .ticket-container { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; max-width: 340px; margin: 15px auto; }
-        .ticket { background: #1e293b; border: 2px solid #334155; height: 85px; border-radius: 18px; display: flex; align-items: center; justify-content: center; font-size: 26px; cursor: pointer; position: relative; }
-        .ticket.open { background: linear-gradient(135deg, #f59e0b, #d97706); border-color: #ffcc00; color: white; font-weight: bold; pointer-events: none; }
-        
-        /* Модальні вікна */
-        .modal { display: none; background: #1f2937; padding: 25px; border-radius: 25px; border: 2px solid #ffcc00; margin: 10px; position: relative; z-index: 50; }
-        .wallet-box { background: #0d1117; color: #10b981; padding: 18px; border-radius: 15px; font-size: 12px; word-break: break-all; margin: 20px 0; border: 1px dashed #10b981; cursor: pointer; font-weight: bold; }
-        .back-btn { background: #334155; color: white; border: none; padding: 15px; border-radius: 15px; font-size: 15px; cursor: pointer; width: 100%; font-weight: bold; }
-        
-        .rules-text { text-align: left; font-size: 14px; line-height: 1.6; color: #cbd5e1; }
-        .rules-text b { color: #ffcc00; }
-
-        #admin-panel { display: none; position: fixed; bottom: 0; left: 0; width: 100%; background: rgba(13, 17, 23, 0.95); padding: 15px 0; border-top: 1px solid #334155; z-index: 100; }
-        .admin-reset { color: #94a3b8; font-size: 12px; background: #1e293b; border: 1px solid #334155; padding: 10px 25px; border-radius: 20px; cursor: pointer; }
-        #music-control { color: #64748b; font-size: 12px; margin-top: 25px; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; padding: 8px 15px; border-radius: 20px; background: #1e293b; }
+        .ticket { background: var(--card); border: 2px solid #334155; height: 85px; border-radius: 18px; display: flex; align-items: center; justify-content: center; font-size: 26px; cursor: pointer; position: relative; }
+        .ticket.open { background: linear-gradient(135deg, #f59e0b, #d97706); border-color: var(--accent); font-weight: bold; pointer-events: none; }
+        .modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #1f2937; padding: 25px; border-radius: 25px; border: 2px solid var(--accent); z-index: 100; width: 80%; }
+        .back-btn { background: #334155; color: white; border: none; padding: 15px; border-radius: 15px; width: 100%; cursor: pointer; font-weight: bold; margin-top: 15px; }
+        #admin-panel { display: none; margin-top: 20px; padding: 10px; border-top: 1px solid #334155; }
     </style>
 </head>
 <body>
-    
-    <audio id="bg-music" loop>
-        <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-17.mp3" type="audio/mpeg">
-    </audio>
 
     <div class="header-block">
         <img src="https://img.icons8.com/color/96/ukraine-circular.png" alt="🇺🇦" class="logo-img">
         <h1>UA LOTTERY 🎲</h1>
     </div>
 
+    <div id="ton-connect"></div>
+
     <div id="game-zone">
-        <div class="extra-buttons">
-            <a href="https://app.ston.fi/swap?ft=TON&tt=EQBrD-UZ8w2tAyxCNjO8lF4ioTwI-ELiQgF7kclC7gM2UOO_" target="_blank" class="ext-btn buy">💎 Купити UA</a>
-            <div onclick="showRules()" class="ext-btn">📜 Правила</div>
-        </div>
-        <p style="color: #94a3b8; margin-bottom: 15px;">Оберіть щасливий квиток 👇</p>
+        <p style="color: #94a3b8;">Оберіть квиток (100 UA) 👇</p>
         <div class="ticket-container" id="grid"></div>
-        <div id="music-control" onclick="toggleMusic()">🎵 Увімкнути музику</div>
+        <button onclick="showRules()" style="background:none; border:1px solid #334155; color:#94a3b8; padding:8px 15px; border-radius:15px; cursor:pointer;">📜 Правила</button>
     </div>
 
     <div id="rules-modal" class="modal">
-        <h3 style="color: #ffcc00; margin-top: 0;">📜 Правила гри</h3>
-        <div class="rules-text">
-            1. Гра проводиться виключно в токені <b>UA</b>. <br>
-            2. Вартість одного квитка — <b>100 UA</b>. <br>
-            3. Після вибору квитка та броні, у вас є 15 хвилин на оплату. <br>
-            4. Обов'язково надішліть скріншот оплати адміністратору: <b>@Leslav</b>. <br>
-            5. Розіграш відбувається після заповнення всіх квитків. <br>
-            6. Переможець обирається рандомно та отримує приз на свій гаманець!
-        </div>
-        <br>
-        <button class="back-btn" onclick="closeModals()">ЗРОЗУМІЛО ✅</button>
-    </div>
-
-    <div id="payment-modal" class="modal">
-        <h3 style="margin:0; color: #ffcc00;">✅ Бронювання квитка</h3>
-        <p style="font-size: 14px;">Скопіюйте адресу для оплати <b>100 UA</b>:</p>
-        <div class="wallet-box" id="walletDisplay" onclick="copyWallet()">
-            UQDXq1iAqu88tVRG62_k03kAXELu_1gzRBMye-VZoFRIRtWw
-        </div>
-        <button class="back-btn" onclick="closeModals()">⬅️ ПОВЕРНУТИСЬ</button>
-        <p style="font-size:12px; color: #94a3b8; margin-top:15px;">Скріншот сюди 👉 <b>@Leslav2025</b></p>
+        <h3 style="color: var(--accent);">📜 Правила</h3>
+        <p style="font-size: 14px; text-align: left;">1. Підключіть Wallet.<br>2. Оберіть квиток.<br>3. Підтвердіть оплату 100 UA.<br>4. Очікуйте розіграшу!</p>
+        <button class="back-btn" onclick="closeModals()">ЗРОЗУМІЛО</button>
     </div>
 
     <div id="admin-panel">
-        <button class="admin-reset" onclick="resetGame()">🔧 Адмін: Новий раунд</button>
+        <button onclick="resetGame()" style="color:#94a3b8; background:#1e293b; border:1px solid #334155; padding:8px; border-radius:10px;">🔧 Адмін: Скинути</button>
     </div>
 
 <script>
     const tg = window.Telegram.WebApp;
     tg.expand();
-    const ADMIN_ID = 409059054;
-    const MY_WALLET = "UQDXq1iAqu88tVRG62_k03kAXELu_1gzRBMye-VZoFRIRtWw";
 
-    if (tg.initDataUnsafe?.user?.id === ADMIN_ID) {
-        document.getElementById('admin-panel').style.display = 'block';
-    }
-    
+    const ADMIN_ID = 409059054;
+    const MY_WALLET = "UQDXq1iAqu88tVRG62_k03kAXELu_1gzRBMye-VZoFRIRtWw"; 
+    const JETTON_MASTER = "EQBrD-UZ8w2tAyxCNjO8lF4ioTwI-ELiQgF7kclC7gM2UOO_";
+
+    // ПРАВИЛЬНИЙ МАНІФЕСТ ДЛЯ ВАШОГО GITHUB
+    const tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
+        manifestUrl: 'https://leslav2025.github.io/UA-lottery/tonconnect-manifest.json',
+        buttonRootId: 'ton-connect'
+    });
+
     function createTickets() {
         const grid = document.getElementById('grid');
-        const boughtTickets = JSON.parse(localStorage.getItem('boughtTickets') || '[]');
+        const bought = JSON.parse(localStorage.getItem('boughtTickets') || '[]');
         grid.innerHTML = '';
         for (let i = 1; i <= 6; i++) {
             const div = document.createElement('div');
-            div.className = 'ticket' + (boughtTickets.includes(i) ? ' open' : '');
-            div.innerText = boughtTickets.includes(i) ? "№" + i : "?";
-            div.onclick = () => choose(i, div);
+            const isOpened = bought.includes(i);
+            div.className = 'ticket' + (isOpened ? ' open' : '');
+            div.innerText = isOpened ? "№" + i : "?";
+            div.onclick = () => handlePay(i, isOpened);
             grid.appendChild(div);
         }
     }
 
-    function choose(num, el) {
-        if(el.classList.contains('open')) return;
-        const userW = prompt("Ваш гаманець для отримання призу:");
-        if (!userW) return;
+    async function handlePay(num, isOpened) {
+        if (isOpened) return;
+        if (!tonConnectUI.connected) {
+            alert("Спочатку підключіть гаманець!");
+            return;
+        }
 
-        let boughtTickets = JSON.parse(localStorage.getItem('boughtTickets') || '[]');
-        boughtTickets.push(num);
-        localStorage.setItem('boughtTickets', JSON.stringify(boughtTickets));
+        try {
+            const tonweb = new TonWeb();
+            const userAddress = tonConnectUI.account.address;
+            const jettonMaster = new TonWeb.token.jetton.JettonMaster(tonweb.provider, { address: JETTON_MASTER });
+            const userJettonWalletAddress = await jettonMaster.getJettonWalletAddress(new TonWeb.utils.Address(userAddress));
 
-        fetch(`https://api.telegram.org/bot6584194059:AAHLZe58364vvTd_vLTIpdW98mazceu-NIc/sendMessage`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-                chat_id: "-1001451233135", 
-                text: `🎰 ЗАЯВКА\n🎫 Квиток: №${num}\n👤: ${tg.initDataUnsafe?.user?.first_name || "Гість"}\n💳 Виплата: ${userW}` 
-            })
-        }).then(() => {
-            document.getElementById('game-zone').style.display = 'none';
-            document.getElementById('payment-modal').style.display = 'block';
-        });
-    }
+            const amount = TonWeb.utils.toNano('100'); 
+            const body = new TonWeb.boc.Cell();
+            body.bits.writeUint(0xf8a7ea5, 32); 
+            body.bits.writeUint(0, 64);          
+            body.bits.writeCoins(amount);        
+            body.bits.writeAddress(new TonWeb.utils.Address(MY_WALLET)); 
+            body.bits.writeAddress(new TonWeb.utils.Address(userAddress)); 
+            body.bits.writeBit(false);           
+            body.bits.writeCoins(TonWeb.utils.toNano('0.01')); 
+            body.bits.writeBit(false);           
 
-    function showRules() {
-        document.getElementById('game-zone').style.display = 'none';
-        document.getElementById('rules-modal').style.display = 'block';
-    }
+            const payload = TonWeb.utils.bytesToBase64(await body.toBoc());
 
-    function closeModals() {
-        document.querySelectorAll('.modal').forEach(m => m.style.display = 'none');
-        document.getElementById('game-zone').style.display = 'block';
-        createTickets();
-    }
+            const transaction = {
+                validUntil: Math.floor(Date.now() / 1000) + 300,
+                messages: [{
+                    address: userJettonWalletAddress.toString(true, true, true),
+                    amount: TonWeb.utils.toNano('0.05').toString(),
+                    payload: payload
+                }]
+            };
 
-    function copyWallet() {
-        const el = document.createElement('textarea');
-        el.value = MY_WALLET;
-        document.body.appendChild(el);
-        el.select();
-        document.execCommand('copy');
-        document.body.removeChild(el);
-        const box = document.getElementById('walletDisplay');
-        box.innerText = "✅ АДРЕСУ СКОПІЙОВАНО!";
-        setTimeout(() => { box.innerText = MY_WALLET; }, 1500);
-    }
-
-    function resetGame() {
-        if(confirm("Очистити поле?")) {
-            localStorage.removeItem('boughtTickets');
-            createTickets();
+            const result = await tonConnectUI.sendTransaction(transaction);
+            if (result) {
+                let bought = JSON.parse(localStorage.getItem('boughtTickets') || '[]');
+                bought.push(num);
+                localStorage.setItem('boughtTickets', JSON.stringify(bought));
+                
+                // Сповіщення в канал
+                fetch(`https://api.telegram.org/bot6584194059:AAHLZe58364vvTd_vLTIpdW98mazceu-NIc/sendMessage`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        chat_id: "-1001451233135", 
+                        text: `🎰 Квиток №${num} КУПЛЕНО!\n👤: ${tg.initDataUnsafe?.user?.first_name || "Гість"}` 
+                    })
+                });
+                createTickets();
+            }
+        } catch (e) {
+            console.error(e);
+            alert("Помилка транзакції!");
         }
     }
 
-    const music = document.getElementById('bg-music');
-    const control = document.getElementById('music-control');
-    let isPlaying = false;
-    function toggleMusic() {
-        if (isPlaying) { music.pause(); control.innerText = "🎵 Увімкнути музику"; } 
-        else { music.play(); control.innerText = "⏸ Вимкнути музику"; }
-        isPlaying = !isPlaying;
-    }
+    function showRules() { document.getElementById('rules-modal').style.display = 'block'; }
+    function closeModals() { document.getElementById('rules-modal').style.display = 'none'; }
+    function resetGame() { localStorage.removeItem('boughtTickets'); createTickets(); }
+
+    if (tg.initDataUnsafe?.user?.id === ADMIN_ID) { document.getElementById('admin-panel').style.display = 'block'; }
     createTickets();
 </script>
 </body>
