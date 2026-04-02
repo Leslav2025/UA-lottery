@@ -3,21 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>UA LOTTERY 🎰</title>
+    <title>National Courier Lottery 🎰</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://unpkg.com/@tonconnect/ui@latest/dist/tonconnect-ui.min.js"></script>
     <style>
         :root { --accent: #ffcc00; --bg: #0d1117; --card: #1e293b; --text: white; }
         body { background-color: var(--bg); color: var(--text); font-family: sans-serif; text-align: center; margin: 0; padding: 15px; }
-        .header-block { display: flex; align-items: center; justify-content: center; gap: 12px; margin: 15px 0; }
-        .logo-img { height: 45px; width: 45px; border-radius: 50%; border: 2px solid var(--accent); }
-        h1 { color: var(--accent); margin: 0; font-size: 22px; text-transform: uppercase; }
+        .header-block { display: flex; flex-direction: column; align-items: center; gap: 10px; margin: 15px 0; }
+        .logo-img { height: 60px; width: 60px; border-radius: 50%; border: 2px solid var(--accent); box-shadow: 0 0 15px rgba(255, 204, 0, 0.3); }
+        h1 { color: var(--accent); margin: 0; font-size: 20px; text-transform: uppercase; letter-spacing: 1px; }
+        .channel-name { color: #94a3b8; font-size: 14px; margin-bottom: 10px; }
         #ton-connect { display: flex; justify-content: center; margin-bottom: 20px; }
         .ticket-container { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; max-width: 340px; margin: 15px auto; }
-        .ticket { background: var(--card); border: 2px solid #334155; height: 85px; border-radius: 18px; display: flex; align-items: center; justify-content: center; font-size: 26px; cursor: pointer; }
-        .ticket.open { background: linear-gradient(135deg, #f59e0b, #d97706); border-color: var(--accent); pointer-events: none; }
+        .ticket { background: var(--card); border: 2px solid #334155; height: 85px; border-radius: 18px; display: flex; align-items: center; justify-content: center; font-size: 26px; cursor: pointer; transition: transform 0.1s; }
+        .ticket:active { transform: scale(0.95); }
+        .ticket.open { background: linear-gradient(135deg, #f59e0b, #d97706); border-color: var(--accent); pointer-events: none; box-shadow: inset 0 0 10px rgba(0,0,0,0.3); }
         #admin-panel { display: none; margin-top: 30px; padding: 15px; border-top: 1px dashed #334155; }
         .admin-btn { background: #7f1d1d; color: white; border: none; padding: 10px 20px; border-radius: 10px; cursor: pointer; font-weight: bold; }
+        .footer-brand { margin-top: 20px; font-size: 10px; color: #475569; text-transform: uppercase; }
     </style>
 </head>
 <body>
@@ -25,18 +28,20 @@
     <div class="header-block">
         <img src="https://img.icons8.com/color/96/ukraine-circular.png" class="logo-img">
         <h1>UA LOTTERY 🎲</h1>
+        <div class="channel-name">National courier</div>
     </div>
 
     <div id="ton-connect"></div>
 
-    <p style="color: #94a3b8; font-size: 14px;">Тестова ціна: <b>0.01 TON</b></p>
+    <p style="color: #94a3b8; font-size: 14px;">Ціна квитка: <b>0.01 TON</b></p>
     
     <div class="ticket-container" id="grid"></div>
 
     <div id="admin-panel">
-        <p style="font-size: 12px; color: #ef4444;">Панель адміністратора</p>
-        <button class="admin-btn" onclick="resetGame()">Скинути всі квитки</button>
+        <button class="admin-btn" onclick="resetGame()">ОЧИСТИТИ ПОЛЕ (НОВА ГРА)</button>
     </div>
+
+    <div class="footer-brand">Powered by National courier</div>
 
 <script>
     const tg = window.Telegram.WebApp;
@@ -66,18 +71,17 @@
 
     async function handleTicket(num, isOpened) {
         if (isOpened) return;
-
         if (!tonConnectUI.connected) {
             tg.showAlert("Будь ласка, підключіть гаманець зверху!");
             return;
         }
 
         tg.showPopup({
-            title: 'Тестова оплата',
-            message: 'Сплатити 0.01 TON за квиток №' + num + '?',
+            title: 'Купівля квитка',
+            message: 'Бажаєте придбати квиток №' + num + ' за 0.01 TON?',
             buttons: [
-                {id: 'pay', type: 'default', text: 'ПЛАТИТИ'},
-                {type: 'cancel', text: 'ВІДМІНА'}
+                {id: 'pay', type: 'default', text: 'ТАК, КУПИТИ'},
+                {type: 'cancel', text: 'СКАСУВАТИ'}
             ]
         }, async (id) => {
             if (id === 'pay') {
@@ -86,7 +90,7 @@
                         validUntil: Math.floor(Date.now() / 1000) + 300,
                         messages: [{
                             address: MY_WALLET,
-                            amount: "10000000" // 0.01 TON
+                            amount: "10000000" 
                         }]
                     };
 
@@ -99,7 +103,7 @@
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({ 
                                 chat_id: "-1001451233135", 
-                                text: `✅ **ТЕСТОВА ОПЛАТА**\n🎫 Квиток: №${num}\n👤: ${user?.first_name || 'Гість'}\n💰 Сума: 0.01 TON`,
+                                text: `✅ **НОВИЙ КВИТОК!**\n🎫 Номер: №${num}\n👤 Гравець: ${user?.first_name || 'Гість'}\n💰 Сплачено: 0.01 TON\n📢 National courier`,
                                 parse_mode: "Markdown" 
                             })
                         });
@@ -108,9 +112,10 @@
                         bought.push(num);
                         localStorage.setItem('boughtTickets', JSON.stringify(bought));
                         render();
+                        tg.showAlert("Вітаємо! Квиток №" + num + " активовано.");
                     }
                 } catch (e) {
-                    tg.showAlert("Оплату не виконано.");
+                    tg.showAlert("Транзакцію скасовано або виникла помилка.");
                 }
             }
         });
@@ -119,7 +124,7 @@
     function resetGame() {
         localStorage.removeItem('boughtTickets');
         render();
-        tg.showAlert("Поле очищено!");
+        tg.showAlert("Гру успішно скинуто.");
     }
 
     if (tg.initDataUnsafe?.user?.id === ADMIN_ID) {
