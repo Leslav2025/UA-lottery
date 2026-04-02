@@ -1,49 +1,108 @@
-            const tonweb = new TonWeb();
-            const userAddress = tonConnectUI.account.address;
-            
-            // Отримуємо Jetton-гаманець користувача
-            const jettonMaster = new TonWeb.token.jetton.JettonMaster(tonweb.provider, { address: JETTON_MASTER });
-            const userJettonAddress = await jettonMaster.getJettonWalletAddress(new TonWeb.utils.Address(userAddress));
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>UA LOTTERY 🎰</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        :root { --accent: #ffcc00; --bg: #0d1117; --card: #1e293b; --text: white; }
+        body { background-color: var(--bg); color: var(--text); font-family: sans-serif; text-align: center; margin: 0; padding: 15px; }
+        .header-block { display: flex; align-items: center; justify-content: center; gap: 12px; margin: 20px 0; }
+        .logo-img { height: 50px; width: 50px; border-radius: 50%; border: 2px solid var(--accent); }
+        h1 { color: var(--accent); margin: 0; font-size: 26px; text-transform: uppercase; }
+        .ticket-container { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; max-width: 340px; margin: 20px auto; }
+        .ticket { background: var(--card); border: 2px solid #334155; height: 90px; border-radius: 20px; display: flex; align-items: center; justify-content: center; font-size: 28px; cursor: pointer; transition: 0.2s; }
+        .ticket.open { background: linear-gradient(135deg, #f59e0b, #d97706); border-color: var(--accent); pointer-events: none; }
+        .btn-rules { background: none; border: 1px solid #334155; color: #94a3b8; padding: 10px 20px; border-radius: 20px; cursor: pointer; margin-top: 20px; }
+        #admin-panel { display: none; margin-top: 30px; border-top: 1px solid #334155; padding-top: 10px; }
+    </style>
+</head>
+<body>
 
-            // Створюємо Payload для переказу 100 UA
-            const cell = new TonWeb.boc.Cell();
-            cell.bits.writeUint(0xf8a7ea5, 32); 
-            cell.bits.writeUint(0, 64);          
-            cell.bits.writeCoins(TonWeb.utils.toNano('100')); 
-            cell.bits.writeAddress(new TonWeb.utils.Address(MY_WALLET)); 
-            cell.bits.writeAddress(new TonWeb.utils.Address(userAddress)); 
-            cell.bits.writeBit(false); 
-            cell.bits.writeCoins(TonWeb.utils.toNano('0.001')); 
-            cell.bits.writeBit(false); 
+    <div class="header-block">
+        <img src="https://img.icons8.com/color/96/ukraine-circular.png" class="logo-img">
+        <h1>UA LOTTERY 🎲</h1>
+    </div>
 
-            const boc = TonWeb.utils.bytesToBase64(await cell.toBoc());
+    <p style="color: #94a3b8;">Ціна квитка: <b>100 UA</b></p>
+    
+    <div class="ticket-container" id="grid"></div>
 
-            const transaction = {
-                validUntil: Math.floor(Date.now() / 1000) + 300,
-                messages: [{
-                    address: userJettonAddress.toString(true, true, true),
-                    amount: TonWeb.utils.toNano('0.05').toString(),
-                    payload: boc
-                }]
-            };
+    <button class="btn-rules" onclick="tg.showAlert('Надішліть 100 UA на гаманець лотереї. Після перевірки транзакції квиток буде заброньовано!')">📜 Правила</button>
 
-            const result = await tonConnectUI.sendTransaction(transaction);
-            if (result) {
-                let bought = JSON.parse(localStorage.getItem('boughtTickets') || '[]');
-                bought.push(num);
-                localStorage.setItem('boughtTickets', JSON.stringify(bought));
+    <div id="admin-panel">
+        <button onclick="localStorage.removeItem('boughtTickets'); location.reload();" style="color:red; background:none; border:none; font-size:12px;">🔧 Скинути гру</button>
+    </div>
+
+<script>
+    const tg = window.Telegram.WebApp;
+    tg.expand();
+
+    const MY_WALLET = "UQDXq1iAqu88tVRG62_k03kAXELu_1gzRBMye-VZoFRIRtWw";
+    const ADMIN_ID = 409059054;
+
+    function render() {
+        const grid = document.getElementById('grid');
+        const bought = JSON.parse(localStorage.getItem('boughtTickets') || '[]');
+        grid.innerHTML = '';
+        for (let i = 1; i <= 6; i++) {
+            const isOpened = bought.includes(i);
+            const div = document.createElement('div');
+            div.className = 'ticket' + (isOpened ? ' open' : '');
+            div.innerText = isOpened ? '№'+i : '?';
+            div.onclick = () => handleTicket(i, isOpened);
+            grid.appendChild(div);
+        }
+    }
+
+    function handleTicket(num, isOpened) {
+        if (isOpened) return;
+
+        // Копіюємо адресу
+        const input = document.createElement('input');
+        input.value = MY_WALLET;
+        document.body.appendChild(input);
+        input.select();
+        document.execCommand('copy');
+        document.body.removeChild(input);
+
+        tg.showPopup({
+            title: 'Оплата квитка №' + num,
+            message: 'Адресу гаманця скопійовано!\n\nВідкрийте Wallet, оберіть токен UA та надішліть 100 одиниць.',
+            buttons: [
+                {id: 'ok', type: 'default', text: 'ВІДКРИТИ ГАМАНЕЦЬ'},
+                {type: 'cancel', text: 'СКАСУВАТИ'}
+            ]
+        }, (id) => {
+            if (id === 'ok') {
+                // Відкриваємо гаманець
+                window.location.href = "ton://transfer/" + MY_WALLET;
+                
+                // Шлемо заявку вам в канал
+                const user = tg.initDataUnsafe?.user;
+                const text = `⏳ **ЗАЯВКА НА КВИТОК №${num}**\n👤 Гравець: ${user?.first_name || 'Гість'}\n🆔 ID: ${user?.id || 'немає'}\n\nКористувач копірнув адресу і пішов платити 100 UA.`;
                 
                 fetch(`https://api.telegram.org/bot6584194059:AAHLZe58364vvTd_vLTIpdW98mazceu-NIc/sendMessage`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
-                        chat_id: "-1001451233135", 
-                        text: `🎰 Квиток №${num} КУПЛЕНО!\n👤: ${tg.initDataUnsafe?.user?.first_name || "Гість"}` 
-                    })
+                    body: JSON.stringify({ chat_id: "-1001451233135", text: text, parse_mode: "Markdown" })
                 });
-                createTickets();
-                tg.showAlert("Успішно! Квиток ваш.");
+
+                // Позначаємо як куплений (для тесту)
+                let bought = JSON.parse(localStorage.getItem('boughtTickets') || '[]');
+                bought.push(num);
+                localStorage.setItem('boughtTickets', JSON.stringify(bought));
+                render();
             }
-        } catch (e) {
-            console.error(e);
-            tg.showAlert("Помилка! Можливо, Telegram Wallet блокує переказ. Спробуйте Tonkeeper.");
+        });
+    }
+
+    if (tg.initDataUnsafe?.user?.id === ADMIN_ID) {
+        document.getElementById('admin-panel').style.display = 'block';
+    }
+
+    render();
+</script>
+</body>
+</html>
