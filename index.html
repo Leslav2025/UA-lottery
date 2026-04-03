@@ -8,37 +8,50 @@
     <script src="https://unpkg.com/@tonconnect/ui@latest/dist/tonconnect-ui.min.js"></script>
     <style>
         :root { --accent: #ffcc00; --bg: #0d1117; --card: #1e293b; --text: white; }
-        body { background-color: var(--bg); color: var(--text); font-family: sans-serif; text-align: center; margin: 0; padding: 15px; }
-        .header-block { display: flex; flex-direction: column; align-items: center; gap: 10px; margin: 15px 0; }
-        .logo-img { height: 60px; width: 60px; border-radius: 50%; border: 2px solid var(--accent); box-shadow: 0 0 15px rgba(255, 204, 0, 0.3); }
-        h1 { color: var(--accent); margin: 0; font-size: 20px; text-transform: uppercase; letter-spacing: 1px; }
-        #ton-connect { display: flex; justify-content: center; margin-bottom: 20px; }
-        .ticket-container { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; max-width: 360px; margin: 15px auto; }
-        .ticket { background: var(--card); border: 1px solid #334155; height: 65px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 18px; cursor: pointer; transition: 0.2s; }
-        .ticket.open { background: linear-gradient(135deg, #f59e0b, #d97706); border-color: var(--accent); pointer-events: none; color: black; font-weight: bold; }
-        #admin-panel { display: none; margin-top: 30px; padding: 15px; border-top: 1px dashed #334155; }
-        .admin-btn { background: #7f1d1d; color: white; border: none; padding: 10px 20px; border-radius: 10px; cursor: pointer; }
-        .footer-brand { margin-top: 20px; font-size: 10px; color: #475569; text-transform: uppercase; }
+        body { background-color: var(--bg); color: var(--text); font-family: sans-serif; text-align: center; margin: 0; padding: 10px; overflow-x: hidden; }
+        .header-block { margin: 10px 0; }
+        #ton-connect { display: flex; justify-content: center; margin-bottom: 10px; }
+        
+        /* Квитки: 4 в ряд для 12 штук */
+        .ticket-container { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; max-width: 340px; margin: 10px auto; }
+        .ticket { background: var(--card); border: 1px solid #475569; height: 55px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 18px; cursor: pointer; transition: 0.2s; }
+        .ticket.open { background: linear-gradient(135deg, #f59e0b, #d97706); border-color: var(--accent); color: black; font-weight: bold; pointer-events: none; }
+        
+        /* КОЛЕСО */
+        .wheel-outer { position: relative; width: 280px; height: 280px; margin: 25px auto; }
+        .wheel-arrow { position: absolute; top: -15px; left: 50%; transform: translateX(-50%); z-index: 10; font-size: 30px; color: var(--accent); filter: drop-shadow(0 0 5px rgba(0,0,0,0.5)); }
+        .wheel-box { width: 100%; height: 100%; border-radius: 50%; border: 6px solid #334155; overflow: hidden; transition: transform 4s cubic-bezier(0.15, 0, 0.15, 1); box-shadow: 0 0 20px rgba(0,0,0,0.5); }
+        canvas { width: 100%; height: 100%; display: block; }
+        
+        #admin-panel { display: none; background: rgba(255,255,255,0.05); padding: 15px; border-radius: 15px; margin-top: 20px; border: 1px solid #334155; }
+        .btn { background: #16a34a; color: white; border: none; padding: 14px 25px; border-radius: 12px; font-weight: bold; cursor: pointer; margin: 5px; font-size: 14px; }
+        .btn-reset { background: #7f1d1d; }
     </style>
 </head>
 <body>
 
     <div class="header-block">
-        <img src="https://img.icons8.com/color/96/ukraine-circular.png" class="logo-img">
-        <h1>UA LOTTERY 🎲</h1>
-        <div style="color: #94a3b8; font-size: 12px;">National courier</div>
+        <h1 style="color:var(--accent); font-size: 22px; margin:0; letter-spacing: 1px;">UA LOTTERY 🎲</h1>
+        <div style="color: #94a3b8; font-size: 13px; margin-top: 4px;">National courier</div>
     </div>
 
     <div id="ton-connect"></div>
-    <p style="color: #94a3b8; font-size: 14px;">Ціна: <b>0.01 TON</b></p>
     
     <div class="ticket-container" id="grid"></div>
 
-    <div id="admin-panel">
-        <button class="admin-btn" onclick="resetGame()">ОЧИСТИТИ ВСЕ (ДЛЯ ВСІХ)</button>
+    <p style="color: #64748b; font-size: 12px; margin-top: 15px;">Крутить тільки адмін після продажу всіх квитків</p>
+    
+    <div class="wheel-outer">
+        <div class="wheel-arrow">▼</div>
+        <div class="wheel-box" id="wheel-container">
+            <canvas id="wheelCanvas" width="500" height="500"></canvas>
+        </div>
     </div>
 
-    <div class="footer-brand">Powered by National courier</div>
+    <div id="admin-panel">
+        <button class="btn" onclick="spinWheel()">🎡 ЗАПУСТИТИ КОЛЕСО</button>
+        <button class="btn btn-reset" onclick="resetGame()">ОЧИСТИТИ КВИТКИ</button>
+    </div>
 
 <script>
     const tg = window.Telegram.WebApp;
@@ -52,81 +65,91 @@
         buttonRootId: 'ton-connect'
     });
 
-    // Функція отримання куплених квитків з історії повідомлень каналу
-    async function getGlobalBoughtTickets() {
-        try {
-            // Ми "симулюємо" глобальність через localStorage для швидкості, 
-            // але в ідеалі тут має бути запит до вашого бекенду або Google Sheets.
-            // Поки що залишаємо localStorage, але я додав 10 квитків.
-            return JSON.parse(localStorage.getItem('globalTickets') || '[]');
-        } catch (e) { return []; }
+    const sectors = [1,2,3,4,5,6,7,8,9,10,11,12];
+    const colors = ['#1e293b','#334155','#1e293b','#334155','#1e293b','#334155','#1e293b','#334155','#1e293b','#334155','#1e293b','#334155'];
+    
+    function drawWheel() {
+        const canvas = document.getElementById('wheelCanvas');
+        const ctx = canvas.getContext('2d');
+        const arc = (Math.PI * 2) / sectors.length;
+        ctx.clearRect(0,0,500,500);
+        for (let i = 0; i < sectors.length; i++) {
+            ctx.beginPath(); ctx.fillStyle = colors[i];
+            ctx.moveTo(250, 250); ctx.arc(250, 250, 250, i * arc, (i + 1) * arc); ctx.fill();
+            ctx.save(); ctx.fillStyle = "white"; ctx.translate(250, 250);
+            ctx.rotate(i * arc + arc / 2); ctx.font = "bold 35px sans-serif";
+            ctx.textAlign = "right"; ctx.fillText(sectors[i], 230, 12); ctx.restore();
+        }
     }
 
-    async function render() {
+    let currentRotation = 0;
+    function spinWheel() {
+        const randIndex = Math.floor(Math.random() * sectors.length);
+        const degPerSector = 360 / sectors.length;
+        const extraSpins = 2160; // 6 повних обертів
+        // Розрахунок, щоб стрілка вказала на потрібний сектор
+        const finalDeg = extraSpins + (360 - (randIndex * degPerSector)) - (degPerSector / 2);
+        
+        currentRotation += finalDeg;
+        document.getElementById('wheel-container').style.transform = `rotate(${currentRotation}deg)`;
+        
+        setTimeout(() => {
+            const winner = sectors[randIndex];
+            tg.showPopup({title: "Результат", message: "Виграв квиток №" + winner});
+            fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    chat_id: CHAT_ID,
+                    text: `🎰 **КОЛЕСО ФОРТУНИ ЗУПИНИЛОСЬ!**\n\n🏆 ПЕРЕМОЖЕЦЬ: **Квиток №${winner}**\n📢 National courier`,
+                    parse_mode: "Markdown"
+                })
+            });
+        }, 4100);
+    }
+
+    function render() {
         const grid = document.getElementById('grid');
-        const bought = await getGlobalBoughtTickets();
+        const bought = JSON.parse(localStorage.getItem('globalTickets') || '[]');
         grid.innerHTML = '';
-        for (let i = 1; i <= 10; i++) {
-            const isOpened = bought.includes(i);
+        sectors.forEach(num => {
+            const isOpened = bought.includes(num);
             const div = document.createElement('div');
             div.className = 'ticket' + (isOpened ? ' open' : '');
-            div.innerText = isOpened ? '❌' : i;
-            div.onclick = () => handleTicket(i, isOpened);
+            div.innerText = isOpened ? '№'+num : num;
+            div.onclick = () => handleTicket(num, isOpened);
             grid.appendChild(div);
-        }
+        });
     }
 
     async function handleTicket(num, isOpened) {
-        if (isOpened) return;
-        if (!tonConnectUI.connected) {
-            tg.showAlert("Підключіть гаманець!");
-            return;
-        }
-
-        tg.showPopup({
-            title: 'Квиток №' + num,
-            message: 'Купити за 0.01 TON?',
-            buttons: [{id: 'pay', type: 'default', text: 'КУПИТИ'}, {type: 'cancel'}]
-        }, async (id) => {
-            if (id === 'pay') {
+        if (isOpened || !tonConnectUI.connected) return;
+        tg.showPopup({ title: 'Квиток №'+num, message: 'Ціна: 0.01 TON', buttons: [{id:'p', text:'ОПЛАТИТИ'}, {type:'cancel'}]}, async (id) => {
+            if (id === 'p') {
+                const tx = { validUntil: Math.floor(Date.now()/1000)+300, messages: [{address: MY_WALLET, amount: "10000000"}]};
                 try {
-                    const tx = { validUntil: Math.floor(Date.now()/1000)+300, messages: [{address: MY_WALLET, amount: "10000000"}]};
-                    const result = await tonConnectUI.sendTransaction(tx);
-                    if (result) {
-                        // Оновлюємо "глобальний" список
-                        let bought = await getGlobalBoughtTickets();
-                        bought.push(num);
-                        localStorage.setItem('globalTickets', JSON.stringify(bought));
-                        
+                    if (await tonConnectUI.sendTransaction(tx)) {
+                        let b = JSON.parse(localStorage.getItem('globalTickets') || '[]');
+                        b.push(num); localStorage.setItem('globalTickets', JSON.stringify(b));
                         const user = tg.initDataUnsafe?.user;
+                        const userLink = `[${user?.first_name || 'Гравець'}](tg://user?id=${user?.id})`;
                         fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
                             method: 'POST',
                             headers: {'Content-Type': 'application/json'},
-                            body: JSON.stringify({
-                                chat_id: CHAT_ID,
-                                text: `✅ Квиток №${num} куплено!\n👤 Гравець: ${user?.first_name}\n💰 0.01 TON`,
-                                parse_mode: "Markdown"
-                            })
+                            body: JSON.stringify({ chat_id: CHAT_ID, text: `✅ Квиток №${num} придбано!\n👤 Гравець: ${userLink}`, parse_mode: "Markdown" })
                         });
                         render();
                     }
-                } catch (e) { tg.showAlert("Помилка."); }
+                } catch(e) {}
             }
         });
     }
 
-    function resetGame() {
-        localStorage.removeItem('globalTickets');
-        render();
-    }
-
-    if (tg.initDataUnsafe?.user?.id === ADMIN_ID) {
-        document.getElementById('admin-panel').style.display = 'block';
-    }
-
+    function resetGame() { localStorage.removeItem('globalTickets'); render(); }
+    if (tg.initDataUnsafe?.user?.id === ADMIN_ID) document.getElementById('admin-panel').style.display = 'block';
+    
+    drawWheel();
     render();
-    // Оновлюємо кожні 10 секунд, щоб бачити чужі покупки
-    setInterval(render, 10000);
 </script>
 </body>
 </html>
