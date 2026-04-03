@@ -3,54 +3,56 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>National Courier Lottery 🎰</title>
+    <title>Pay UA Lottery 🎰</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://unpkg.com/@tonconnect/ui@latest/dist/tonconnect-ui.min.js"></script>
     <style>
         :root { --accent: #ffcc00; --bg: #0d1117; --card: #1e293b; --text: white; }
         body { background-color: var(--bg); color: var(--text); font-family: sans-serif; text-align: center; margin: 0; padding: 10px; overflow-x: hidden; }
         .header-block { margin: 10px 0; }
+        .jackpot-label { color: var(--accent); font-weight: bold; font-size: 24px; text-shadow: 0 0 10px rgba(255, 204, 0, 0.5); margin: 5px 0; }
         #ton-connect { display: flex; justify-content: center; margin-bottom: 10px; }
-        
-        /* Квитки: 4 в ряд для 12 штук */
-        .ticket-container { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; max-width: 340px; margin: 10px auto; }
-        .ticket { background: var(--card); border: 1px solid #475569; height: 55px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 18px; cursor: pointer; transition: 0.2s; }
+        .ticket-container { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; max-width: 350px; margin: 10px auto; }
+        .ticket { background: var(--card); border: 1px solid #475569; height: 65px; border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 14px; cursor: pointer; overflow: hidden; }
+        .ticket b { font-size: 18px; }
         .ticket.open { background: linear-gradient(135deg, #f59e0b, #d97706); border-color: var(--accent); color: black; font-weight: bold; pointer-events: none; }
+        .ticket .user-name { font-size: 10px; text-transform: uppercase; margin-top: 2px; max-width: 90%; white-space: nowrap; overflow: hidden; }
         
-        /* КОЛЕСО */
-        .wheel-outer { position: relative; width: 280px; height: 280px; margin: 25px auto; }
-        .wheel-arrow { position: absolute; top: -15px; left: 50%; transform: translateX(-50%); z-index: 10; font-size: 30px; color: var(--accent); filter: drop-shadow(0 0 5px rgba(0,0,0,0.5)); }
-        .wheel-box { width: 100%; height: 100%; border-radius: 50%; border: 6px solid #334155; overflow: hidden; transition: transform 4s cubic-bezier(0.15, 0, 0.15, 1); box-shadow: 0 0 20px rgba(0,0,0,0.5); }
-        canvas { width: 100%; height: 100%; display: block; }
+        .wheel-outer { position: relative; width: 260px; height: 260px; margin: 20px auto; }
+        .wheel-arrow { position: absolute; top: -15px; left: 50%; transform: translateX(-50%); z-index: 10; font-size: 25px; color: var(--accent); }
+        .wheel-box { width: 100%; height: 100%; border-radius: 50%; border: 5px solid #334155; transition: transform 4s cubic-bezier(0.15, 0, 0.15, 1); }
+        canvas { width: 100%; height: 100%; }
         
-        #admin-panel { display: none; background: rgba(255,255,255,0.05); padding: 15px; border-radius: 15px; margin-top: 20px; border: 1px solid #334155; }
-        .btn { background: #16a34a; color: white; border: none; padding: 14px 25px; border-radius: 12px; font-weight: bold; cursor: pointer; margin: 5px; font-size: 14px; }
+        #admin-panel { display: none; background: rgba(255,255,255,0.05); padding: 15px; border-radius: 15px; margin-top: 15px; }
+        .btn { background: #16a34a; color: white; border: none; padding: 12px 20px; border-radius: 10px; font-weight: bold; cursor: pointer; width: 80%; margin: 5px; }
         .btn-reset { background: #7f1d1d; }
+        
+        .footer { margin-top: 30px; padding-bottom: 20px; font-size: 11px; color: #475569; line-height: 1.6; }
     </style>
 </head>
 <body>
 
     <div class="header-block">
-        <h1 style="color:var(--accent); font-size: 22px; margin:0; letter-spacing: 1px;">UA LOTTERY 🎲</h1>
-        <div style="color: #94a3b8; font-size: 13px; margin-top: 4px;">National courier</div>
+        <h1 style="color:var(--accent); font-size: 26px; margin:0;">Pay UA 💎</h1>
+        <div class="jackpot-label">ВИГРАШ: 20 000 UA</div>
     </div>
 
     <div id="ton-connect"></div>
-    
     <div class="ticket-container" id="grid"></div>
 
-    <p style="color: #64748b; font-size: 12px; margin-top: 15px;">Крутить тільки адмін після продажу всіх квитків</p>
-    
     <div class="wheel-outer">
         <div class="wheel-arrow">▼</div>
-        <div class="wheel-box" id="wheel-container">
-            <canvas id="wheelCanvas" width="500" height="500"></canvas>
-        </div>
+        <div class="wheel-box" id="wheel-container"><canvas id="wheelCanvas" width="500" height="500"></canvas></div>
     </div>
 
     <div id="admin-panel">
-        <button class="btn" onclick="spinWheel()">🎡 ЗАПУСТИТИ КОЛЕСО</button>
+        <button class="btn" onclick="spinWheel()">🎡 ЗАПУСТИТИ РОЗІГРАШ</button>
         <button class="btn btn-reset" onclick="resetGame()">ОЧИСТИТИ КВИТКИ</button>
+    </div>
+
+    <div class="footer">
+        © Всі права захищені @Leslav & Gemini AI<br>
+        Офіційний додаток Pay UA Lottery
     </div>
 
 <script>
@@ -67,89 +69,90 @@
 
     const sectors = [1,2,3,4,5,6,7,8,9,10,11,12];
     const colors = ['#1e293b','#334155','#1e293b','#334155','#1e293b','#334155','#1e293b','#334155','#1e293b','#334155','#1e293b','#334155'];
-    
+
     function drawWheel() {
-        const canvas = document.getElementById('wheelCanvas');
-        const ctx = canvas.getContext('2d');
+        const ctx = document.getElementById('wheelCanvas').getContext('2d');
         const arc = (Math.PI * 2) / sectors.length;
-        ctx.clearRect(0,0,500,500);
         for (let i = 0; i < sectors.length; i++) {
             ctx.beginPath(); ctx.fillStyle = colors[i];
             ctx.moveTo(250, 250); ctx.arc(250, 250, 250, i * arc, (i + 1) * arc); ctx.fill();
             ctx.save(); ctx.fillStyle = "white"; ctx.translate(250, 250);
-            ctx.rotate(i * arc + arc / 2); ctx.font = "bold 35px sans-serif";
-            ctx.textAlign = "right"; ctx.fillText(sectors[i], 230, 12); ctx.restore();
+            ctx.rotate(i * arc + arc / 2); ctx.font = "bold 30px sans-serif";
+            ctx.textAlign = "right"; ctx.fillText(sectors[i], 230, 10); ctx.restore();
         }
-    }
-
-    let currentRotation = 0;
-    function spinWheel() {
-        const randIndex = Math.floor(Math.random() * sectors.length);
-        const degPerSector = 360 / sectors.length;
-        const extraSpins = 2160; // 6 повних обертів
-        // Розрахунок, щоб стрілка вказала на потрібний сектор
-        const finalDeg = extraSpins + (360 - (randIndex * degPerSector)) - (degPerSector / 2);
-        
-        currentRotation += finalDeg;
-        document.getElementById('wheel-container').style.transform = `rotate(${currentRotation}deg)`;
-        
-        setTimeout(() => {
-            const winner = sectors[randIndex];
-            tg.showPopup({title: "Результат", message: "Виграв квиток №" + winner});
-            fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({
-                    chat_id: CHAT_ID,
-                    text: `🎰 **КОЛЕСО ФОРТУНИ ЗУПИНИЛОСЬ!**\n\n🏆 ПЕРЕМОЖЕЦЬ: **Квиток №${winner}**\n📢 National courier`,
-                    parse_mode: "Markdown"
-                })
-            });
-        }, 4100);
     }
 
     function render() {
         const grid = document.getElementById('grid');
-        const bought = JSON.parse(localStorage.getItem('globalTickets') || '[]');
+        const boughtData = JSON.parse(localStorage.getItem('globalTicketsData') || '{}');
         grid.innerHTML = '';
         sectors.forEach(num => {
-            const isOpened = bought.includes(num);
+            const userName = boughtData[num];
             const div = document.createElement('div');
-            div.className = 'ticket' + (isOpened ? ' open' : '');
-            div.innerText = isOpened ? '№'+num : num;
-            div.onclick = () => handleTicket(num, isOpened);
+            div.className = 'ticket' + (userName ? ' open' : '');
+            div.innerHTML = `<b>${num}</b>` + (userName ? `<div class="user-name">${userName}</div>` : '');
+            div.onclick = () => handleTicket(num, !!userName);
             grid.appendChild(div);
         });
     }
 
     async function handleTicket(num, isOpened) {
         if (isOpened || !tonConnectUI.connected) return;
-        tg.showPopup({ title: 'Квиток №'+num, message: 'Ціна: 0.01 TON', buttons: [{id:'p', text:'ОПЛАТИТИ'}, {type:'cancel'}]}, async (id) => {
+        tg.showPopup({ title: 'Квиток №'+num, message: 'Ціна: 0.01 TON', buttons: [{id:'p', text:'ОПЛАТИТИ'}]}, async (id) => {
             if (id === 'p') {
                 const tx = { validUntil: Math.floor(Date.now()/1000)+300, messages: [{address: MY_WALLET, amount: "10000000"}]};
                 try {
-                    if (await tonConnectUI.sendTransaction(tx)) {
-                        let b = JSON.parse(localStorage.getItem('globalTickets') || '[]');
-                        b.push(num); localStorage.setItem('globalTickets', JSON.stringify(b));
+                    const result = await tonConnectUI.sendTransaction(tx);
+                    if (result) {
+                        let data = JSON.parse(localStorage.getItem('globalTicketsData') || '{}');
                         const user = tg.initDataUnsafe?.user;
-                        const userLink = `[${user?.first_name || 'Гравець'}](tg://user?id=${user?.id})`;
+                        const name = user?.first_name || 'Гравець';
+                        const walletAddress = tonConnectUI.account.address; // Отримуємо адресу гаманця
+                        
+                        data[num] = name;
+                        localStorage.setItem('globalTicketsData', JSON.stringify(data));
+                        
                         fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
                             method: 'POST',
                             headers: {'Content-Type': 'application/json'},
-                            body: JSON.stringify({ chat_id: CHAT_ID, text: `✅ Квиток №${num} придбано!\n👤 Гравець: ${userLink}`, parse_mode: "Markdown" })
+                            body: JSON.stringify({ 
+                                chat_id: CHAT_ID, 
+                                text: `✅ **Pay UA:** №${num} придбано!\n👤 Гравець: [${name}](tg://user?id=${user.id})\n👛 Гаманець: \`${walletAddress}\``, 
+                                parse_mode: "Markdown" 
+                            })
                         });
                         render();
                     }
-                } catch(e) {}
+                } catch(e) {
+                    console.error("Помилка транзакції:", e);
+                }
             }
         });
     }
 
-    function resetGame() { localStorage.removeItem('globalTickets'); render(); }
+    let rot = 0;
+    function spinWheel() {
+        const idx = Math.floor(Math.random() * sectors.length);
+        const deg = (360 / sectors.length);
+        const final = 1800 + (360 - (idx * deg)) - (deg / 2);
+        rot += final;
+        document.getElementById('wheel-container').style.transform = `rotate(${rot}deg)`;
+        setTimeout(() => {
+            const winner = sectors[idx];
+            fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ chat_id: CHAT_ID, text: `🎰 **Pay UA РОЗІГРАШ!**\n🏆 ПЕРЕМОЖЕЦЬ: **Квиток №${winner}**\n💰 Виграш: 20 000 UA`, parse_mode: "Markdown" })
+            });
+            tg.showAlert("Виграв №" + winner);
+        }, 4100);
+    }
+
+    function resetGame() { localStorage.removeItem('globalTicketsData'); render(); }
     if (tg.initDataUnsafe?.user?.id === ADMIN_ID) document.getElementById('admin-panel').style.display = 'block';
     
-    drawWheel();
-    render();
+    drawWheel(); render();
+    setInterval(render, 5000);
 </script>
 </body>
 </html>
