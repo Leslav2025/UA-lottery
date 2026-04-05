@@ -2,157 +2,143 @@
 <html lang="uk">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Pay UA Lottery 🎰</title>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>OUN Tank: Battle for UA</title>
     <script src="https://unpkg.com/@tonconnect/ui@latest/dist/tonconnect-ui.min.js"></script>
     <style>
-        :root { --accent: #ffcc00; --bg: #0d1117; --card: #1e293b; --text: white; }
-        body { background-color: var(--bg); color: var(--text); font-family: sans-serif; text-align: center; margin: 0; padding: 10px; overflow-x: hidden; }
-        .header-block { margin: 10px 0; }
-        .jackpot-label { color: var(--accent); font-weight: bold; font-size: 24px; text-shadow: 0 0 10px rgba(255, 204, 0, 0.5); margin: 5px 0; }
-        #ton-connect { display: flex; justify-content: center; margin-bottom: 10px; }
-        .ticket-container { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; max-width: 350px; margin: 10px auto; }
-        .ticket { background: var(--card); border: 1px solid #475569; height: 65px; border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 14px; cursor: pointer; overflow: hidden; }
-        .ticket b { font-size: 18px; }
-        .ticket.open { background: linear-gradient(135deg, #f59e0b, #d97706); border-color: var(--accent); color: black; font-weight: bold; pointer-events: none; }
-        .ticket .user-name { font-size: 10px; text-transform: uppercase; margin-top: 2px; max-width: 90%; white-space: nowrap; overflow: hidden; }
-        
-        .wheel-outer { position: relative; width: 260px; height: 260px; margin: 20px auto; }
-        .wheel-arrow { position: absolute; top: -15px; left: 50%; transform: translateX(-50%); z-index: 10; font-size: 25px; color: var(--accent); }
-        .wheel-box { width: 100%; height: 100%; border-radius: 50%; border: 5px solid #334155; transition: transform 4s cubic-bezier(0.15, 0, 0.15, 1); }
-        canvas { width: 100%; height: 100%; }
-        
-        #admin-panel { display: none; background: rgba(255,255,255,0.05); padding: 15px; border-radius: 15px; margin-top: 15px; }
-        .btn { background: #16a34a; color: white; border: none; padding: 12px 20px; border-radius: 10px; font-weight: bold; cursor: pointer; width: 80%; margin: 5px; }
-        .btn-reset { background: #7f1d1d; }
-        
-        .footer { margin-top: 30px; padding-bottom: 20px; font-size: 11px; color: #475569; line-height: 1.6; }
+        body { display: flex; flex-direction: column; align-items: center; background: #050505; color: #fff; font-family: sans-serif; margin: 0; padding: 10px; touch-action: manipulation; overflow-x: hidden; transition: background 1s; }
+        #ton-connect-button { margin-bottom: 10px; }
+        .ui-panel { background: rgba(20, 0, 0, 0.9); border: 2px solid #ff4757; border-radius: 15px; padding: 10px; margin-bottom: 10px; text-align: center; width: 90%; box-shadow: 0 0 15px #ff4757; }
+        .stats-row { display: flex; justify-content: space-around; align-items: center; }
+        .score-box { font-size: 18px; font-weight: bold; color: #f1c40f; }
+        .ammo-box { font-size: 18px; font-weight: bold; color: #ff4757; }
+        canvas { border: 3px solid #444; border-radius: 12px; background: #000; max-width: 95vw; display: block; }
+        .controls { display: grid; grid-template-columns: repeat(3, 75px); grid-template-rows: repeat(3, 75px); gap: 12px; margin-top: 15px; justify-content: center; }
+        .btn { width: 75px; height: 75px; background: #222; border: 2px solid #ff4757; border-radius: 20px; font-size: 35px; color: #fff; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px #600; }
+        .btn:active { transform: translateY(2px); box-shadow: 0 1px #600; background: #400; }
+        .withdraw-panel { display: none; background: #1a1a1a; padding: 20px; border-radius: 15px; border: 2px solid #f1c40f; text-align: center; width: 90%; margin-top: 10px; }
+        .withdraw-btn { background: #f1c40f; color: #000; border: none; padding: 15px; border-radius: 10px; font-weight: bold; font-size: 18px; cursor: pointer; width: 100%; margin-top: 10px; }
+        #payment-modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #1a0000; padding: 25px; border: 3px solid #ff4757; border-radius: 20px; z-index: 1000; text-align: center; width: 85%; }
+        .pay-btn { background: #2ecc71; color: #fff; border: none; padding: 15px; border-radius: 10px; font-weight: bold; width: 100%; margin-top: 15px; }
     </style>
 </head>
 <body>
 
-    <div class="header-block">
-        <h1 style="color:var(--accent); font-size: 26px; margin:0;">Pay UA 💎</h1>
-        <div class="jackpot-label">ВИГРАШ: 20 000 UA</div>
+    <div id="ton-connect-button"></div>
+    <div class="ui-panel">
+        <div id="lvl-txt" style="color:#ff4757; font-size:16px; font-weight:bold; margin-bottom:5px;">ШТУРМ РІВЕНЬ 1</div>
+        <div class="stats-row">
+            <div class="score-box">💰 <span id="score">0</span> UA</div>
+            <div class="ammo-box">🚀 <span id="ammo">10</span></div>
+        </div>
     </div>
 
-    <div id="ton-connect"></div>
-    <div class="ticket-container" id="grid"></div>
+    <canvas id="gameCanvas" width="352" height="224"></canvas>
 
-    <div class="wheel-outer">
-        <div class="wheel-arrow">▼</div>
-        <div class="wheel-box" id="wheel-container"><canvas id="wheelCanvas" width="500" height="500"></canvas></div>
+    <div id="withdraw-panel" class="withdraw-panel">
+        <h2 style="color:#f1c40f; margin:0;">ШТАБ ПЕРЕМОГИ</h2>
+        <p style="font-size:14px;">Територію визволено! Виведіть UA для обнулення.</p>
+        <button class="withdraw-btn" onclick="requestWithdraw()">ВИВЕСТИ UA ТА ОБНУЛИТИ</button>
     </div>
 
-    <div id="admin-panel">
-        <button class="btn" onclick="spinWheel()">🎡 ЗАПУСТИТИ РОЗІГРАШ</button>
-        <button class="btn btn-reset" onclick="resetGame()">ОЧИСТИТИ КВИТКИ</button>
+    <div id="game-controls" class="controls">
+        <button class="btn btn-up" onclick="move('ArrowUp')">↑</button>
+        <button class="btn btn-left" onclick="move('ArrowLeft')">←</button>
+        <button class="btn btn-fire" onclick="shoot()">🔥</button>
+        <button class="btn btn-right" onclick="move('ArrowRight')">→</button>
+        <button class="btn btn-down" onclick="move('ArrowDown')">↓</button>
     </div>
 
-    <div class="footer">
-        © Всі права захищені @Leslav & Gemini AI<br>
-        Офіційний додаток Pay UA Lottery
+    <div id="payment-modal">
+        <h2 id="modal-title" style="color:#ff4757">БК ЗАКІНЧИВСЯ!</h2>
+        <button class="pay-btn" id="buy-btn-text" onclick="buyAmmo()">КУПИТИ СНАРЯДИ (0.01 TON)</button>
+        <button onclick="document.getElementById('payment-modal').style.display='none'" style="background:none; color:gray; border:none; margin-top:10px">Назад</button>
     </div>
 
 <script>
-    const tg = window.Telegram.WebApp;
-    const BOT_TOKEN = "6584194059:AAHLZe58364vvTd_vLTIpdW98mazceu-NIc";
-    const CHAT_ID = "-1001451233135";
-    const MY_WALLET = "UQDXq1iAqu88tVRG62_k03kAXELu_1gzRBMye-VZoFRIRtWw";
-    const ADMIN_ID = 409059054;
+const tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
+    manifestUrl: 'https://leslav2025.github.io/Ua-game/tonconnect-manifest.json',
+    buttonRootId: 'ton-connect-button'
+});
 
-    const tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
-        manifestUrl: 'https://leslav2025.github.io/UA-lottery/tonconnect-manifest.json',
-        buttonRootId: 'ton-connect'
-    });
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
 
-    const sectors = [1,2,3,4,5,6,7,8,9,10,11,12];
-    const colors = ['#1e293b','#334155','#1e293b','#334155','#1e293b','#334155','#1e293b','#334155','#1e293b','#334155','#1e293b','#334155'];
+let score = parseInt(localStorage.getItem('oun_score')) || 0;
+let ammo = parseInt(localStorage.getItem('oun_ammo')) || 10;
+let currentLevel = 1;
+let player = { x: 1, y: 1, dir: 'up' };
+let bullets = [], enemyBullets = [], monsters = [];
 
-    function drawWheel() {
-        const ctx = document.getElementById('wheelCanvas').getContext('2d');
-        const arc = (Math.PI * 2) / sectors.length;
-        for (let i = 0; i < sectors.length; i++) {
-            ctx.beginPath(); ctx.fillStyle = colors[i];
-            ctx.moveTo(250, 250); ctx.arc(250, 250, 250, i * arc, (i + 1) * arc); ctx.fill();
-            ctx.save(); ctx.fillStyle = "white"; ctx.translate(250, 250);
-            ctx.rotate(i * arc + arc / 2); ctx.font = "bold 30px sans-serif";
-            ctx.textAlign = "right"; ctx.fillText(sectors[i], 230, 10); ctx.restore();
-        }
+const maps = {
+    1: [[1,1,1,1,1,1,1,1,1,1,1],[1,0,0,1,0,0,0,1,0,0,1],[1,1,0,1,0,1,1,0,1,0,1],[1,0,0,0,0,0,0,0,0,0,1],[1,0,1,1,1,0,1,1,1,0,1],[1,0,0,0,0,0,0,0,0,2,1],[1,1,1,1,1,1,1,1,1,1,1]],
+    2: [[1,1,1,1,1,1,1,1,1,1,1],[1,0,0,4,0,0,0,4,0,0,1],[1,4,0,4,0,1,0,4,0,1,1],[1,0,0,0,0,4,0,0,0,0,1],[1,4,0,4,4,0,4,4,4,0,1],[1,0,0,0,0,0,0,0,0,2,1],[1,1,1,1,1,1,1,1,1,1,1]],
+    3: [[1,1,1,1,1,1,1,1,1,1,1],[1,0,4,0,4,0,4,0,4,0,1],[1,0,1,0,1,0,1,0,1,0,1],[1,0,0,0,0,0,0,0,0,0,1],[1,4,1,4,1,4,1,4,1,0,1],[1,0,0,0,0,0,0,0,0,2,1],[1,1,1,1,1,1,1,1,1,1,1]],
+    4: [[1,1,1,1,1,1,1,1,1,1,1],[1,0,0,0,4,2,4,0,0,0,1],[1,0,1,0,0,0,0,0,1,0,1],[1,4,1,0,4,4,4,0,1,4,1],[1,0,0,0,0,0,0,0,0,0,1],[1,0,4,0,1,0,1,0,4,0,1],[1,1,1,1,1,1,1,1,1,1,1]],
+    5: [[1,1,1,1,1,1,1,1,1,1,1],[1,0,0,0,0,0,0,0,0,0,1],[1,0,0,0,0,0,0,0,0,0,1],[1,0,0,0,2,0,0,0,0,0,1],[1,0,0,0,0,0,0,0,0,0,1],[1,0,0,0,0,0,0,0,0,0,1],[1,1,1,1,1,1,1,1,1,1,1]]
+};
+
+let activeMap = JSON.parse(JSON.stringify(maps[1]));
+
+function saveData() { localStorage.setItem('oun_score', score); localStorage.setItem('oun_ammo', ammo); }
+function playSound(f, t, d) { try { const a=new(window.AudioContext||window.webkitAudioContext)(); const o=a.createOscillator(); const g=a.createGain(); o.type=t; o.frequency.setValueAtTime(f,a.currentTime); o.connect(g); g.connect(a.destination); g.gain.setValueAtTime(0.05,a.currentTime); o.start(); o.stop(a.currentTime+d); } catch(e){} }
+
+function switchLevel(lvl) {
+    currentLevel = lvl;
+    activeMap = JSON.parse(JSON.stringify(maps[lvl]));
+    player = { x: 1, y: 1, dir: 'up' };
+    bullets = []; enemyBullets = [];
+
+    // --- НАЛАШТУВАННЯ ВОРОГІВ ---
+    if(lvl === 1) { 
+        monsters = [{x:8, y:4, hp:1}, {x:2, y:5, hp:1}, {x:5,y:3,hp:1}, {x:1,y:3,hp:1}, {x:9,y:1,hp:1}]; 
+        document.getElementById('lvl-txt').innerText = "ШТУРМ РІВЕНЬ 1"; 
     }
-
-    function render() {
-        const grid = document.getElementById('grid');
-        const boughtData = JSON.parse(localStorage.getItem('globalTicketsData') || '{}');
-        grid.innerHTML = '';
-        sectors.forEach(num => {
-            const userName = boughtData[num];
-            const div = document.createElement('div');
-            div.className = 'ticket' + (userName ? ' open' : '');
-            div.innerHTML = `<b>${num}</b>` + (userName ? `<div class="user-name">${userName}</div>` : '');
-            div.onclick = () => handleTicket(num, !!userName);
-            grid.appendChild(div);
-        });
+    else if(lvl === 2) { 
+        monsters = [{x:5,y:1,hp:2}, {x:8,y:1,hp:2}, {x:5,y:5,hp:2}, {x:1,y:5,hp:2}, {x:9,y:5,hp:2}, {x:3,y:1,hp:1}]; 
+        document.getElementById('lvl-txt').innerText = "ШТУРМ РІВЕНЬ 2"; 
     }
-
-    async function handleTicket(num, isOpened) {
-        if (isOpened || !tonConnectUI.connected) return;
-        tg.showPopup({ title: 'Квиток №'+num, message: 'Ціна: 0.01 TON', buttons: [{id:'p', text:'ОПЛАТИТИ'}]}, async (id) => {
-            if (id === 'p') {
-                const tx = { validUntil: Math.floor(Date.now()/1000)+300, messages: [{address: MY_WALLET, amount: "10000000"}]};
-                try {
-                    const result = await tonConnectUI.sendTransaction(tx);
-                    if (result) {
-                        let data = JSON.parse(localStorage.getItem('globalTicketsData') || '{}');
-                        const user = tg.initDataUnsafe?.user;
-                        const name = user?.first_name || 'Гравець';
-                        const walletAddress = tonConnectUI.account.address; // Отримуємо адресу гаманця
-                        
-                        data[num] = name;
-                        localStorage.setItem('globalTicketsData', JSON.stringify(data));
-                        
-                        fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-                            method: 'POST',
-                            headers: {'Content-Type': 'application/json'},
-                            body: JSON.stringify({ 
-                                chat_id: CHAT_ID, 
-                                text: `✅ **Pay UA:** №${num} придбано!\n👤 Гравець: [${name}](tg://user?id=${user.id})\n👛 Гаманець: \`${walletAddress}\``, 
-                                parse_mode: "Markdown" 
-                            })
-                        });
-                        render();
-                    }
-                } catch(e) {
-                    console.error("Помилка транзакції:", e);
-                }
-            }
-        });
+    else if(lvl === 3) { 
+        monsters = [{x:9,y:1,hp:2,canShoot:true}, {x:1,y:5,hp:2,canShoot:true}, {x:5,y:3,hp:3,canShoot:true}, {x:9,y:3,hp:2,canShoot:true}, {x:1,y:1,hp:2}]; 
+        document.getElementById('lvl-txt').innerText = "ШТУРМ РІВЕНЬ 3"; document.body.style.background = "#000510"; 
     }
-
-    let rot = 0;
-    function spinWheel() {
-        const idx = Math.floor(Math.random() * sectors.length);
-        const deg = (360 / sectors.length);
-        const final = 1800 + (360 - (idx * deg)) - (deg / 2);
-        rot += final;
-        document.getElementById('wheel-container').style.transform = `rotate(${rot}deg)`;
-        setTimeout(() => {
-            const winner = sectors[idx];
-            fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ chat_id: CHAT_ID, text: `🎰 **Pay UA РОЗІГРАШ!**\n🏆 ПЕРЕМОЖЕЦЬ: **Квиток №${winner}**\n💰 Виграш: 20 000 UA`, parse_mode: "Markdown" })
-            });
-            tg.showAlert("Виграв №" + winner);
-        }, 4100);
+    else if(lvl === 4) { 
+        monsters = [{x:9,y:5,hp:4,canShoot:true,hunter:true}, {x:1,y:5,hp:2,canShoot:true}, {x:5,y:5,hp:3,canShoot:true}, {x:1,y:1,hp:3,canShoot:true}, {x:9,y:1,hp:3}]; 
+        document.getElementById('lvl-txt').innerText = "ШТУРМ РІВЕНЬ 4"; document.body.style.background = "#1a0500"; 
     }
+    else if(lvl === 5) {
+        monsters = []; 
+        document.getElementById('lvl-txt').innerText = "ШТАБ (ВИВІД UA)";
+        document.getElementById('game-controls').style.display = 'none';
+        document.getElementById('withdraw-panel').style.display = 'block';
+        document.body.style.background = "#002a00";
+    }
+    playSound(400, 'sine', 0.5);
+}
 
-    function resetGame() { localStorage.removeItem('globalTicketsData'); render(); }
-    if (tg.initDataUnsafe?.user?.id === ADMIN_ID) document.getElementById('admin-panel').style.display = 'block';
+function requestWithdraw() {
+    const wallet = tonConnectUI.account ? tonConnectUI.account.address : "Не підключено";
+    const nick = tonConnectUI.account ? "Гравець" : "Гість";
     
-    drawWheel(); render();
-    setInterval(render, 5000);
-</script>
-</body>
-</html>
+    // Текст повідомлення
+    const message = `Запит на вивід!\nГра: OUN Tank: Battle for UA\nНік: ${nick}\nСума: ${score} UA\nГаманець: ${wallet}`;
+    const encodedMessage = encodeURIComponent(message);
+    
+    // Пряме посилання на бота з текстом
+    window.location.href = `https://t.me/share/url?url=http://t.me/tokenpist_bot&text=${encodedMessage}`;
+
+    // --- ВИПРАВЛЕННЯ: Обнуляємо рахунок, але залишаємо гаманець підключеним ---
+    localStorage.removeItem('oun_score');
+    localStorage.removeItem('oun_ammo');
+    
+    // Перезавантажуємо сторінку через 2 секунди
+    setTimeout(() => { 
+        window.location.reload(); 
+    }, 2000);
+}
+
+function draw() {
+    ctx.fillStyle = '#0a0a0a'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+    for(let y=0; y<activeMap.length; y++) {
+        for(let x=0; x<activeMap[y].length; x++) {
+            if (activeMap[y][x] === 1) { ctx.fillStyle = '#333'; ctx.fillRect(x*32, y*32, 31, 31); ctx.strokeStyle = '#ff0000'; ctx.strokeRect(
