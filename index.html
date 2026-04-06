@@ -3,171 +3,102 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>UA-LOTTERY — Розіграш</title>
+    <title>UA-LOTTERY — Колесо Фортуни</title>
     <style>
-        :root {
-            --accent: #ffcc00;
-            --bg: #0d1117;
-            --card: #161b22;
-            --border: #30363d;
-            --text-secondary: #8b949e;
-        }
-
-        body { 
-            background-color: var(--bg); 
-            color: white; 
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
-            text-align: center; 
-            padding: 40px 20px; 
-            margin: 0;
-        }
-
-        .lottery-title {
-            font-size: 14px;
-            letter-spacing: 3px;
-            color: var(--text-secondary);
-            margin-bottom: 5px;
-        }
-
-        h1 { 
-            color: var(--accent); 
-            text-transform: uppercase; 
-            margin-bottom: 30px; 
-            font-size: 28px;
-            letter-spacing: 1px;
-        }
-
-        .order-box { 
-            background: var(--card); 
-            border: 1px solid var(--border); 
-            padding: 25px; 
-            border-radius: 20px; 
-            max-width: 380px; 
-            margin: 0 auto; 
-            box-shadow: 0 8px 32px rgba(0,0,0,0.4); 
-        }
-
-        .ticket-info {
-            background: rgba(255, 204, 0, 0.1);
-            padding: 15px;
-            border-radius: 12px;
-            margin-bottom: 20px;
-            font-size: 14px;
-            border: 1px solid var(--accent);
-        }
-
-        label { 
-            display: block; 
-            text-align: left; 
-            margin: 15px 0 8px 10px; 
-            color: var(--text-secondary); 
-            font-size: 13px; 
-        }
-
-        input { 
-            width: 100%; 
-            padding: 14px; 
-            border-radius: 12px; 
-            border: 1px solid #334155; 
-            background: var(--bg); 
-            color: white; 
-            font-size: 18px; 
-            box-sizing: border-box; 
-            outline: none;
-            text-align: center;
-        }
-
-        .price-display { 
-            font-size: 32px; 
-            color: var(--accent); 
-            font-weight: 700; 
-            margin: 20px 0 5px 0; 
-            padding-top: 15px; 
-            border-top: 1px solid var(--border); 
-        }
-
-        .currency-info { 
-            font-size: 14px; 
-            color: var(--text-secondary); 
-            margin-bottom: 25px; 
-        }
-
-        .btn-buy { 
-            background: var(--accent); 
-            color: #000; 
-            padding: 18px; 
-            width: 100%; 
-            border-radius: 15px; 
-            border: none; 
-            font-weight: bold; 
-            font-size: 18px; 
-            cursor: pointer; 
-            display: block;
-            margin-bottom: 15px;
-            transition: transform 0.2s;
-        }
-
-        .btn-buy:active { transform: scale(0.98); }
-
-        .instruction { 
-            font-size: 11px; 
-            color: var(--text-secondary); 
-            margin-top: 20px; 
-            border: 1px dashed var(--border); 
-            padding: 10px; 
-            border-radius: 10px; 
-            line-height: 1.4;
-        }
+        :root { --accent: #ffcc00; --bg: #0d1117; --card: #161b22; --border: #30363d; }
+        body { background: var(--bg); color: white; font-family: sans-serif; text-align: center; padding: 20px; }
+        
+        /* Колесо */
+        .wheel-container { position: relative; width: 300px; height: 300px; margin: 20px auto; border: 5px solid var(--border); border-radius: 50%; overflow: hidden; transition: transform 4s cubic-bezier(0.1, 0, 0.2, 1); }
+        .wheel-part { position: absolute; width: 50%; height: 50%; transform-origin: 100% 100%; border: 1px solid var(--bg); display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 20px; }
+        
+        /* Квитки */
+        .tickets-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; max-width: 350px; margin: 20px auto; }
+        .ticket { background: var(--card); border: 2px solid var(--border); padding: 15px; border-radius: 10px; cursor: pointer; transition: 0.3s; }
+        .ticket.bought { border-color: var(--accent); color: var(--accent); background: rgba(255, 204, 0, 0.1); pointer-events: none; }
+        
+        /* Кнопки */
+        .btn { background: var(--accent); color: black; border: none; padding: 15px 30px; border-radius: 10px; font-weight: bold; cursor: pointer; margin: 10px; width: 80%; max-width: 300px; }
+        .admin-panel { margin-top: 50px; padding: 20px; border: 1px dashed red; border-radius: 15px; display: none; }
     </style>
 </head>
 <body>
 
-    <div class="lottery-title">UA-LOTTERY</div>
-    <h1>КУПИТИ КВИТОК</h1>
+    <h1>UA-LOTTERY</h1>
+    <p>Оберіть один з 6 вільних квитків:</p>
 
-    <div class="order-box">
-        <div class="ticket-info">
-            🎫 Ціна 1 квитка: <b>0.02 USDT</b>
-        </div>
+    <div class="tickets-grid" id="ticketsGrid">
+        <div class="ticket" onclick="buyTicket(1)">1</div>
+        <div class="ticket" onclick="buyTicket(2)">2</div>
+        <div class="ticket" onclick="buyTicket(3)">3</div>
+        <div class="ticket" onclick="buyTicket(4)">4</div>
+        <div class="ticket" onclick="buyTicket(5)">5</div>
+        <div class="ticket" onclick="buyTicket(6)">6</div>
+    </div>
 
-        <label>Кількість квитків:</label>
-        <input type="number" id="tickets" value="1" min="1" oninput="updatePrice()">
-        
-        <div class="price-display"><span id="total">0.02</span> USDT</div>
-        <div class="currency-info">
-            ≈ <span id="total-uah">1</span> грн | ≈ <span id="total-rub">2</span> руб
+    <div class="wheel-container" id="wheel">
         </div>
+    
+    <div id="status">Очікуємо заповнення квитків...</div>
 
-        <button class="btn-buy" onclick="buyTicket()">ПРИДБАТИ КВИТКИ</button>
-        
-        <div class="instruction">
-            ⚠️ Після натискання бот <b>@tokenpist_bot</b> зафіксує вашу ставку та видасть номери квитків.
-        </div>
+    <div class="admin-panel" id="adminPanel">
+        <h3>АДМІН-ПАНЕЛЬ</h3>
+        <button class="btn" onclick="spinWheel()">КРУТИТИ КОЛЕСО</button>
+        <button class="btn" style="background: #ff4444;" onclick="resetLottery()">ОЧИСТИТИ КВИТКИ</button>
     </div>
 
     <script>
-        function updatePrice() {
-            const pricePerTicket = 0.02;
-            const tickets = document.getElementById('tickets').value || 1;
-            const total = (pricePerTicket * tickets).toFixed(2);
-            
-            document.getElementById('total').innerText = total;
-            document.getElementById('total-uah').innerText = Math.round(total * 40);
-            document.getElementById('total-rub').innerText = Math.round(total * 95);
+        const botToken = "YOUR_BOT_TOKEN"; // Тут має бути токен твого бота
+        const walletAddress = "ТВОЯ_АДРЕСА_ГАМАНЦЯ"; 
+
+        // Перевірка на адміна (можна додати пароль через prompt)
+        if(window.location.hash === "#admin") {
+            document.getElementById('adminPanel').style.display = 'block';
         }
 
-        function buyTicket() {
-            const tickets = document.getElementById('tickets').value;
-            const total = document.getElementById('total').innerText;
+        function buyTicket(num) {
+            const msg = `🎟 КВИТОК ПРИДБАНО!%0A📍 Номер: ${num}%0A👛 Гаманець: ${walletAddress}%0A💳 Оплатіть 0.02 USDT для підтвердження.`;
             
-            const msg = `ЛОТЕРЕЯ: ЗАМОВЛЕННЯ КВИТКІВ%0A🎫 Кількість: ${tickets} шт.%0A💰 Сума: ${total} USDT`;
-            
-            // Відкриваємо бота
+            // Відкриваємо ТГ для надсилання в чат
             window.open(`https://t.me/tokenpist_bot?text=${msg}`, '_blank');
+            
+            // Візуально помічаємо квиток (без бази даних це тільки для поточного вікна)
+            const tickets = document.querySelectorAll('.ticket');
+            tickets[num-1].classList.add('bought');
+            tickets[num-1].innerText = "✅";
         }
-        
-        // Початковий розрахунок
-        updatePrice();
+
+        function spinWheel() {
+            const wheel = document.getElementById('wheel');
+            const randomDeg = Math.floor(Math.random() * 3600) + 720; // Мінімум 2 оберти
+            wheel.style.transform = `rotate(${randomDeg}deg)`;
+            
+            setTimeout(() => {
+                const winner = Math.floor(Math.random() * 6) + 1;
+                alert("ПЕРЕМОЖЕЦЬ: КВИТОК №" + winner);
+            }, 4000);
+        }
+
+        function resetLottery() {
+            if(confirm("Очистити всі квитки?")) {
+                const tickets = document.querySelectorAll('.ticket');
+                tickets.forEach((t, i) => {
+                    t.classList.remove('bought');
+                    t.innerText = i + 1;
+                });
+            }
+        }
+
+        // Генерація секторів колеса
+        const wheel = document.getElementById('wheel');
+        for(let i=0; i<6; i++) {
+            const part = document.createElement('div');
+            part.className = 'wheel-part';
+            part.style.transform = `rotate(${i * 60}deg) skewY(-30deg)`;
+            part.style.background = i % 2 === 0 ? '#ffcc00' : '#161b22';
+            part.innerHTML = `<span style="transform: skewY(30deg) rotate(30deg); color: ${i % 2 === 0 ? 'black' : 'white'};">${i+1}</span>`;
+            wheel.appendChild(part);
+        }
     </script>
 </body>
 </html>
