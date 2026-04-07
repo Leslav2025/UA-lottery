@@ -5,20 +5,64 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
-        body { font-family: sans-serif; text-align: center; background: #0088cc; color: white; padding: 20px; }
-        .btn { display: inline-block; padding: 15px 30px; background: #fff; color: #0088cc; 
-               text-decoration: none; border-radius: 10px; font-weight: bold; margin-top: 20px; }
+        body { font-family: 'Segoe UI', sans-serif; text-align: center; background: #0088cc; color: white; padding: 15px; }
+        .ticket-container { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 20px; }
+        .ticket { 
+            width: 80px; height: 110px; background: white; color: #0088cc; 
+            border-radius: 10px; display: flex; flex-direction: column; 
+            justify-content: center; align-items: center; cursor: pointer;
+            font-weight: bold; border: 3px solid #ffd700; transition: 0.3s;
+        }
+        .ticket.bought { background: #ccc; border-color: #888; color: #666; opacity: 0.6; pointer-events: none; }
+        .ticket b { font-size: 1.5em; }
+        .info { background: rgba(255,255,255,0.1); padding: 15px; border-radius: 15px; margin-bottom: 20px; }
+        .prize { color: #ffd700; font-size: 1.2em; font-weight: bold; }
     </style>
 </head>
 <body>
     <h1>🎰 UA-Lottery TON</h1>
-    <p>Джекпот сьогодні чекає на тебе!</p>
-    <div id="price">Ціна квитка: 0.5 TON</div>
     
-    <a href="ton://transfer/UQDXq1iAqu88tVRG62_k03kAXELu_1gzRBMye-VZoFRIRtWw?amount=500000000&text=LottoUA" class="btn">
-        ПРИДБАТИ КВИТОК
-    </a>
+    <div class="info">
+        <div>Ціна квитка: <b>0.01 TON</b></div>
+        <div class="prize">Виграш: 0.03 TON 🏆</div>
+    </div>
 
-    <p style="font-size: 0.8em; margin-top: 30px;">Твій гаманець: <br> UQDXq1iAqu88...tWw</p>
+    <p>Оберіть свій щасливий квиток:</p>
+    
+    <div class="ticket-container" id="tickets">
+        </div>
+
+    <script>
+        const wallet = "UQDXq1iAqu88tVRG62_k03kAXELu_1gzRBMye-VZoFRIRtWw";
+        const ticketsContainer = document.getElementById('tickets');
+
+        for (let i = 1; i <= 5; i++) {
+            let t = document.createElement('div');
+            t.className = 'ticket';
+            t.innerHTML = `<span>Квиток</span><b>#${i}</b>`;
+            
+            // Перевірка чи купив користувач цей квиток раніше
+            if (localStorage.getItem('ticket_' + i)) {
+                t.classList.add('bought');
+                t.innerHTML = `<span>Куплено</span><b>#${i}</b>`;
+            }
+
+            t.onclick = function() {
+                // Посилання на оплату (0.01 TON = 10000000 нанотон)
+                const payLink = `ton://transfer/${wallet}?amount=10000000&text=Ticket_${i}`;
+                window.location.href = payLink;
+                
+                // Позначаємо як куплений (для цього користувача)
+                localStorage.setItem('ticket_' + i, 'true');
+                t.classList.add('bought');
+                t.innerHTML = `<span>Куплено</span><b>#${i}</b>`;
+            };
+            ticketsContainer.appendChild(t);
+        }
+    </script>
+
+    <p style="font-size: 0.7em; margin-top: 40px; opacity: 0.8;">
+        Гаманець для виплат: <br> ${wallet}
+    </p>
 </body>
 </html>
