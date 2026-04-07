@@ -20,7 +20,7 @@
     <div id="ton-connect-button" style="margin-bottom: 20px; display: flex; justify-content: center;"></div>
     <div class="card">
         <h3>Оберіть квиток (0.01 TON)</h3>
-        <div class="grid" id="grid">
+        <div class="grid">
             <div class="t" id="t1" onclick="pay(1)">1</div><div class="t" id="t2" onclick="pay(2)">2</div><div class="t" id="t3" onclick="pay(3)">3</div>
             <div class="t" id="t4" onclick="pay(4)">4</div><div class="t" id="t5" onclick="pay(5)">5</div><div class="t" id="t6" onclick="pay(6)">6</div>
         </div>
@@ -55,20 +55,16 @@
         draw();
 
         tonUI.onStatusChange(wallet => {
-            const adminPanel = document.getElementById('admin');
-            const statusText = document.getElementById('status');
-            
             if (wallet && wallet.account.address) {
-                statusText.innerText = "Гаманець підключено";
+                document.getElementById('status').innerText = "Гаманець підключено";
                 const addr = wallet.account.address.toLowerCase();
-                
-                // Перевірка по обох ваших гаманцях (RtWw та r5cz)
-                if (addr.includes("rtww") || addr.includes("r5cz") || addr.includes("34de4aca") || addr.includes("536e655c")) {
-                    adminPanel.style.display = 'block';
+                // Пряма перевірка вашого гаманця RtWw або r5cz
+                if (addr.includes("rtww") || addr.includes("r5cz")) {
+                    document.getElementById('admin').style.display = 'block';
                 }
             } else {
-                statusText.innerText = "Підключіть гаманець";
-                adminPanel.style.display = 'none';
+                document.getElementById('status').innerText = "Підключіть гаманець";
+                document.getElementById('admin').style.display = 'none';
             }
         });
 
