@@ -3,91 +3,78 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>UA-Lottery Web3</title>
+    <title>UA-Lottery Connect</title>
     <script src="https://unpkg.com/@tonconnect/ui@latest/dist/tonconnect-ui.min.js"></script>
     <style>
-        body { font-family: sans-serif; text-align: center; background: #0088cc; color: white; padding: 20px; margin: 0; }
-        #ton-connect-button { display: flex; justify-content: center; margin-bottom: 20px; }
+        body { font-family: sans-serif; text-align: center; background: #0088cc; color: white; padding: 15px; margin: 0; }
+        #ton-connect-button { display: flex; justify-content: center; margin: 15px 0; }
         .grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
         .ticket { width: 85px; height: 110px; background: white; color: #0088cc; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-weight: bold; cursor: pointer; border: 3px solid gold; }
         .ticket.bought { background: #444 !important; color: #888 !important; border-color: #222 !important; pointer-events: none; }
-        #status { font-weight: bold; margin: 15px 0; min-height: 24px; color: #fff; }
-        #admin-panel { display: none; margin-top: 30px; border-top: 1px dashed white; padding-top: 20px; }
+        #status { font-weight: bold; margin: 15px 0; min-height: 20px; color: #ffd700; }
+        #admin { display: none; margin-top: 25px; padding: 10px; background: red; color: white; border: none; border-radius: 8px; cursor: pointer; }
     </style>
 </head>
 <body>
     <h2>🎰 UA-Lottery TON</h2>
     <div id="ton-connect-button"></div>
-    <div id="status">ЗАВАНТАЖЕННЯ...</div>
+    <div id="status">ПІДКЛЮЧІТЬ ГАМАНЕЦЬ</div>
     
     <div class="grid" id="container"></div>
-
-    <div id="admin-panel">
-        <button onclick="localStorage.clear(); location.reload();" style="padding:12px; background:red; color:white; border:none; border-radius:8px; cursor:pointer; font-weight:bold;">Скинути всі квитки (АДМІН)</button>
-    </div>
+    <button id="admin" onclick="localStorage.clear(); location.reload();">Скинути (АДМІН)</button>
 
 <script>
     const myWallet = "UQDXq1iAqu88tVRG62_k03kAXELu_1gzRBMye-VZoFRIRtWw";
     
+    // Ініціалізація без зайвих затримок
     const tonConnectUI = new TONConnectUI.TonConnectUI({
         manifestUrl: 'https://leslav2025.github.io/UA-lottery/tonconnect-manifest.json',
         buttonRootId: 'ton-connect-button'
     });
 
     tonConnectUI.onStatusChange(wallet => {
-        const statusEl = document.getElementById('status');
         if (wallet) {
-            statusEl.innerText = "ОБЕРІТЬ КВИТОК";
-            // Якщо зайшов ти (адмін)
+            document.getElementById('status').innerText = "ОБЕРІТЬ КВИТОК";
+            // Якщо зайшов ти - з'явиться кнопка скидання
             if (wallet.account.address.toLowerCase().includes(myWallet.toLowerCase().substring(2, 10))) {
-                document.getElementById('admin-panel').style.display = 'block';
+                document.getElementById('admin').style.display = 'inline-block';
             }
-        } else {
-            statusEl.innerText = "БУДЬ ЛАСКА, ПІДКЛЮЧІТЬ ГАМАНЕЦЬ";
         }
     });
 
     async function buyTicket(i) {
         if (!tonConnectUI.connected) {
-            alert("Спочатку підключіть гаманець через кнопку вгорі!");
+            alert("Спочатку підключіться!");
             return;
         }
 
-        const statusEl = document.getElementById('status');
-        statusEl.innerText = "ОЧІКУЄМО ПІДТВЕРДЖЕННЯ...";
-        statusEl.style.color = "white";
-        
-        const transaction = {
-            validUntil: Math.floor(Date.now() / 1000) + 60,
-            messages: [{
-                address: myWallet,
-                amount: "10000000", // 0.01 TON
-            }]
-        };
-
         try {
-            await tonConnectUI.sendTransaction(transaction);
+            document.getElementById('status').innerText = "ОЧІКУВАННЯ ОПЛАТИ...";
             
-            // Логіка як у твоєму прикладі
-            statusEl.innerText = "ОПЛАЧЕНО! КВИТОК ВАШ";
-            statusEl.style.color = "#ffd700";
+            const tx = {
+                validUntil: Math.floor(Date.now() / 1000) + 60,
+                messages: [{ address: myWallet, amount: "10000000" }]
+            };
+
+            await tonConnectUI.sendTransaction(tx);
             
+            // Твій робочий статус
+            document.getElementById('status').innerText = "ОПЛАЧЕНО! КВИТОК ВАШ";
             localStorage.setItem('t' + i, 'true');
             setTimeout(() => { location.reload(); }, 1500);
             
         } catch (e) {
-            statusEl.innerText = "ОШИБКА ОПЛАТЫ";
-            statusEl.style.color = "#ff0055";
+            document.getElementById('status').innerText = "ПОМИЛКА ОПЛАТИ";
+            document.getElementById('status').style.color = "#ff0055";
         }
     }
 
-    // Рендер квитків
     const container = document.getElementById('container');
     for (let i = 1; i <= 5; i++) {
         const t = document.createElement('div');
-        const isBought = localStorage.getItem('t' + i);
-        t.className = 'ticket' + (isBought ? ' bought' : '');
-        t.innerHTML = isBought ? 'Куплено<br>#' + i : 'Квиток<br>#' + i;
+        const sold = localStorage.getItem('t' + i);
+        t.className = 'ticket' + (sold ? ' bought' : '');
+        t.innerHTML = sold ? 'Куплено<br>#' + i : 'Квиток<br>#' + i;
         t.onclick = () => buyTicket(i);
         container.appendChild(t);
     }
