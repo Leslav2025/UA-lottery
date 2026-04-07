@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ЛОТЕРЕЯ UA</title>
+    <title>UA-LOTTERY</title>
     <script src="https://unpkg.com/@tonconnect/ui@latest/dist/tonconnect-ui.min.js"></script>
     <style>
         body { background: #0d1117; color: white; font-family: sans-serif; text-align: center; margin: 0; padding: 15px; }
@@ -12,53 +12,44 @@
         .t { background: #21262d; border: 1px solid #30363d; padding: 15px; border-radius: 10px; font-weight: bold; cursor: pointer; }
         .t.active { background: #0088cc; border-color: white; }
         #wheel-canvas { width: 260px; height: 260px; transition: transform 4s cubic-bezier(0.1, 0, 0.2, 1); border-radius: 50%; }
-        #admin { display: none; margin-top: 20px; padding: 15px; border: 1px dashed #238636; border-radius: 10px; }
-        button { background: #238636; color: white; border: none; padding: 12px; width: 100%; border-radius: 8px; font-weight: bold; margin-bottom: 10px; }
+        #admin { display: none; margin-top: 20px; padding: 15px; border: 2px dashed #238636; border-radius: 10px; background: rgba(35, 134, 54, 0.1); }
+        button.admin-btn { background: #238636; color: white; border: none; padding: 12px; width: 100%; border-radius: 8px; font-weight: bold; margin-bottom: 10px; cursor: pointer; }
     </style>
 </head>
 <body>
-    <div id="ton-connect-button" style="margin-bottom: 20px;"></div>
+    <div id="ton-connect-button" style="margin-bottom: 20px; display: flex; justify-content: center;"></div>
+    
     <div class="card">
         <h3>Оберіть квиток (0.01 TON)</h3>
         <div class="grid">
             <div class="t" id="t1" onclick="pay(1)">1</div><div class="t" id="t2" onclick="pay(2)">2</div><div class="t" id="t3" onclick="pay(3)">3</div>
             <div class="t" id="t4" onclick="pay(4)">4</div><div class="t" id="t5" onclick="pay(5)">5</div><div class="t" id="t6" onclick="pay(6)">6</div>
         </div>
+
         <div style="position:relative; width:260px; margin:auto;">
             <div style="position:absolute; top:-10px; left:50%; transform:translateX(-50%); width:0; height:0; border-left:10px solid transparent; border-right:10px solid transparent; border-top:20px solid red; z-index:2;"></div>
             <canvas id="wheel-canvas" width="400" height="400"></canvas>
         </div>
-        <p id="status" style="font-size:12px; color:#8b949e; margin-top:15px;">Підключіть гаманець</p>
+
+        <p id="status" style="font-size:14px; color:#8b949e; margin-top:15px;">Завантаження...</p>
         
         <div id="admin">
-            <p style="color:#238636; font-size:12px; font-weight:bold;">ВІТАЮ, АДМІН!</p>
-            <button onclick="spin()">КРУТИТИ КОЛЕСО</button>
-            <button style="background:#da3633" onclick="location.reload()">НОВА ГРА</button>
+            <p style="color:#2ecc71; font-weight:bold; margin-bottom:10px;">⚙️ ПАНЕЛЬ АДМІНІСТРАТОРА</p>
+            <button class="admin-btn" onclick="spin()">КРУТИТИ КОЛЕСО</button>
+            <button class="admin-btn" style="background:#da3633" onclick="location.reload()">НОВА ГРА</button>
         </div>
     </div>
 
     <script>
-        // ВАША АДРЕСА ДЛЯ ПЕРЕВІРКИ
-        const ADMIN_WALLET = "UQDXK9M3gE8B9S1X7W0D5V6J4P9N2K1R8T5C4X7Y0Z9ARtWw"; 
+        // Перевірка вашого гаманця
+        const ADMIN_WALLET = "UQDXK9M3gE8B9S1X7W0D5V6J4P9N2K1R8T5C4X7Y0Z9ARtWw";
 
         const tonUI = new TON_CONNECT_UI.TonConnectUI({
             manifestUrl: 'https://leslav2025.github.io/UA-lottery/tonconnect-manifest.json',
             buttonRootId: 'ton-connect-button'
         });
 
-        // Слідкуємо за підключенням гаманця
-        tonUI.onStatusChange(wallet => {
-            if (wallet && wallet.account.address) {
-                const userAddr = wallet.account.address;
-                // Якщо заходить власник - показуємо панель
-                if (userAddr.toLowerCase().includes("rtww") || userAddr.toLowerCase().includes("r5cz")) {
-                    document.getElementById('admin').style.display = 'block';
-                }
-            } else {
-                document.getElementById('admin').style.display = 'none';
-            }
-        });
-
+        // Малювання колеса
         const ctx = document.getElementById('wheel-canvas').getContext('2d');
         const colors = ['#0088cc','#1c2128','#0088cc','#1c2128','#0088cc','#1c2128'];
         function draw() {
@@ -71,16 +62,31 @@
         }
         draw();
 
+        // Слідкуємо за підключенням
+        tonUI.onStatusChange(wallet => {
+            if (wallet && wallet.account.address) {
+                const addr = wallet.account.address;
+                document.getElementById('status').innerText = "Гаманець підключено";
+                // Перевіряємо, чи це ви (адмін)
+                if (addr.toLowerCase().includes("rtww")) {
+                    document.getElementById('admin').style.display = 'block';
+                }
+            } else {
+                document.getElementById('status').innerText = "Будь ласка, підключіть гаманець";
+                document.getElementById('admin').style.display = 'none';
+            }
+        });
+
         async function pay(n) {
-            if(!tonUI.account) return alert("Підключіть гаманець!");
+            if(!tonUI.account) return alert("Спочатку підключіть гаманець!");
             try {
                 await tonUI.sendTransaction({
                     validUntil: Math.floor(Date.now()/1000) + 300,
                     messages: [{ address: "UQAtfK2M3gE8B9S1X7W0D5V6J4P9N2K1R8T5C4X7Y0Z9A2B3", amount: "10000000" }]
                 });
                 document.getElementById('t'+n).classList.add('active');
-                document.getElementById('status').innerText = "Квиток №"+n+" ОПЛАЧЕНО!";
-            } catch(e) { alert("Помилка оплати"); }
+                document.getElementById('status').innerText = "Квиток №"+n+" КУПЛЕНО!";
+            } catch(e) { alert("Оплата не пройшла"); }
         }
 
         let rot = 0;
