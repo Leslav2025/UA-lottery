@@ -43,23 +43,20 @@
 
         const ctx = document.getElementById('wheel-canvas').getContext('2d');
         const colors = ['#0088cc','#1c2128','#0088cc','#1c2128','#0088cc','#1c2128'];
-        function draw() {
-            ctx.clearRect(0,0,400,400);
-            for(let i=0; i<6; i++) {
-                ctx.beginPath(); ctx.fillStyle = colors[i]; ctx.moveTo(200,200);
-                ctx.arc(200,200,200, i*Math.PI/3, (i+1)*Math.PI/3); ctx.fill();
-                ctx.save(); ctx.translate(200,200); ctx.rotate(i*Math.PI/3 + Math.PI/6);
-                ctx.fillStyle="white"; ctx.font="bold 40px Arial"; ctx.textAlign="center"; ctx.fillText(i+1, 130, 15); ctx.restore();
-            }
+        
+        for(let i=0; i<6; i++) {
+            ctx.beginPath(); ctx.fillStyle = colors[i]; ctx.moveTo(200,200);
+            ctx.arc(200,200,200, i*Math.PI/3, (i+1)*Math.PI/3); ctx.fill();
+            ctx.save(); ctx.translate(200,200); ctx.rotate(i*Math.PI/3 + Math.PI/6);
+            ctx.fillStyle="white"; ctx.font="bold 40px Arial"; ctx.textAlign="center"; ctx.fillText(i+1, 130, 15); ctx.restore();
         }
-        draw();
 
         tonUI.onStatusChange(wallet => {
             if (wallet && wallet.account.address) {
                 document.getElementById('status').innerText = "Гаманець підключено";
                 const addr = wallet.account.address.toLowerCase();
-                // Пряма перевірка вашого гаманця RtWw або r5cz
-                if (addr.includes("rtww") || addr.includes("r5cz")) {
+                // НАДІЙНА ПЕРЕВІРКА RtWw ТА ТЕХНІЧНОГО ФОРМАТУ
+                if (addr.includes("rtww") || addr.includes("34de4aca")) {
                     document.getElementById('admin').style.display = 'block';
                 }
             } else {
@@ -69,14 +66,14 @@
         });
 
         async function pay(n) {
-            if(!tonUI.account) return alert("Підключіть гаманець!");
+            if(!tonUI.account) return alert("Спочатку підключіть гаманець!");
             try {
                 await tonUI.sendTransaction({
                     validUntil: Math.floor(Date.now()/1000) + 300,
                     messages: [{ address: "UQAtfK2M3gE8B9S1X7W0D5V6J4P9N2K1R8T5C4X7Y0Z9A2B3", amount: "10000000" }]
                 });
                 document.getElementById('t'+n).classList.add('active');
-            } catch(e) { alert("Скасовано"); }
+            } catch(e) { alert("Оплата не пройшла"); }
         }
 
         let rot = 0;
