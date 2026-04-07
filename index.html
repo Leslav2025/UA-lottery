@@ -39,14 +39,44 @@
         const wallet = "UQDXq1iAqu88tVRG62_k03kAXELu_1gzRBMye-VZoFRIRtWw";
         const ticketsContainer = document.getElementById('tickets');
 
-        // Кнопка тільки для тебе за посиланням ?admin
+        // Показуємо адмін-кнопку
         if (window.location.search.includes('admin')) {
             document.getElementById('adminBtn').style.display = 'inline-block';
         }
 
+        // Генеруємо квитки
         for (let i = 1; i <= 5; i++) {
-            let t = document.createElement('div');
+            const t = document.createElement('div');
             t.className = 'ticket';
-            t.innerHTML = `<span>Квиток</span><b>#${i}</b>`;
-            
             if (localStorage.getItem('ticket_' + i)) {
+                t.classList.add('bought');
+                t.innerHTML = `<span>Куплено</span><b>#${i}</b>`;
+            } else {
+                t.innerHTML = `<span>Квиток</span><b>#${i}</b>`;
+            }
+
+            t.onclick = function() {
+                const amount = 10000000; // 0.01 TON
+                const comment = "Ticket_" + i;
+                
+                // Використовуємо універсальний лінк для всіх гаманців
+                const payLink = `https://app.tonkeeper.com/transfer/${wallet}?amount=${amount}&text=${comment}`;
+                
+                window.location.href = payLink;
+
+                localStorage.setItem('ticket_' + i, 'true');
+                this.classList.add('bought');
+                this.innerHTML = `<span>Куплено</span><b>#${i}</b>`;
+            };
+            ticketsContainer.appendChild(t);
+        }
+
+        function resetLotto() {
+            if(confirm('Скинути всі квитки?')) {
+                localStorage.clear();
+                location.reload();
+            }
+        }
+    </script>
+</body>
+</html>
