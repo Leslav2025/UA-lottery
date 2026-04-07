@@ -2,33 +2,36 @@
 <html lang="uk">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>UA-LOTTERY — Колесо Фортуни</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>UA-LOTTERY</title>
     <script src="https://unpkg.com/@tonconnect/ui@latest/dist/tonconnect-ui.min.js"></script>
     <style>
-        :root { --accent: #0088cc; --bg: #0d1117; --card: #161b22; --border: #30363d; --ton-blue: #0088cc; }
-        body { background: var(--bg); color: white; font-family: 'Segoe UI', sans-serif; text-align: center; padding: 20px; margin: 0; }
+        :root { --accent: #0088cc; --bg: #0d1117; --card: #161b22; --border: #30363d; }
+        body { background: var(--bg); color: white; font-family: -apple-system, sans-serif; text-align: center; padding: 20px; margin: 0; user-select: none; }
         
-        #ton-connect-button { display: flex; justify-content: center; margin: 20px 0; }
-        .lottery-container { max-width: 400px; margin: 0 auto; background: var(--card); border: 1px solid var(--border); padding: 25px; border-radius: 25px; }
+        #ton-connect-button { display: flex; justify-content: center; margin: 15px 0; }
+        .lottery-container { max-width: 380px; margin: 0 auto; background: var(--card); border: 1px solid var(--border); padding: 20px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
         
+        h2 { margin: 10px 0 5px 0; font-size: 22px; }
+        .price { color: var(--accent); font-weight: bold; font-size: 16px; margin-bottom: 20px; }
+
         /* Квитки */
-        .tickets-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 20px 0; }
-        .ticket { 
-            background: #21262d; border: 2px solid var(--border); padding: 20px 5px; 
-            border-radius: 15px; font-size: 22px; font-weight: bold; cursor: pointer; transition: 0.3s; 
-        }
-        .ticket.bought { background: var(--ton-blue); border-color: white; box-shadow: 0 0 15px var(--ton-blue); pointer-events: none; }
+        .tickets-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 20px 0; }
+        .ticket { background: #21262d; border: 2px solid var(--border); padding: 25px 5px; border-radius: 15px; font-size: 24px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .ticket:active { transform: scale(0.95); background: #2d333b; }
+        .ticket.bought { background: var(--accent); border-color: white; color: white; pointer-events: none; position: relative; }
+        .ticket.bought::after { content: "✅"; position: absolute; font-size: 14px; top: 5px; right: 5px; }
 
-        /* Колесо Фортуни */
-        .wheel-box { position: relative; width: 260px; height: 260px; margin: 30px auto; border: 8px solid var(--border); border-radius: 50%; box-shadow: 0 0 20px rgba(0,0,0,0.5); overflow: hidden; }
-        #wheel { width: 100%; height: 100%; border-radius: 50%; transition: transform 5s cubic-bezier(0.15, 0, 0.15, 1); position: relative; }
-        .wheel-sector { position: absolute; width: 50%; height: 50%; transform-origin: 100% 100%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 18px; border: 1px solid var(--bg); }
-        .pointer { position: absolute; top: -10px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 15px solid transparent; border-right: 15px solid transparent; border-top: 30px solid #ff4444; z-index: 10; }
+        /* Колесо (SVG спрощене) */
+        .wheel-box { position: relative; width: 260px; height: 260px; margin: 30px auto; }
+        #wheel-svg { width: 100%; height: 100%; transition: transform 5s cubic-bezier(0.15, 0, 0.2, 1); }
+        .pointer { position: absolute; top: -15px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 15px solid transparent; border-right: 15px solid transparent; border-top: 30px solid #ff4444; z-index: 10; }
 
+        #status { font-size: 14px; color: #8b949e; margin-top: 15px; min-height: 1.4em; }
+        
         /* Адмінка */
-        #admin-panel { display: none; margin-top: 25px; padding: 15px; border: 2px dashed #ffcc00; border-radius: 20px; }
-        .btn-action { background: #238636; color: white; border: none; padding: 15px; border-radius: 12px; font-weight: bold; cursor: pointer; width: 100%; margin-bottom: 10px; }
+        #admin-panel { display: none; margin-top: 25px; padding: 15px; border: 2px dashed #ffcc00; border-radius: 15px; }
+        .btn-admin { background: #238636; color: white; border: none; padding: 12px; border-radius: 10px; font-weight: bold; width: 100%; margin-bottom: 10px; font-size: 14px; }
         .btn-reset { background: #ff4444; }
     </style>
 </head>
@@ -37,29 +40,43 @@
     <div id="ton-connect-button"></div>
 
     <div class="lottery-container">
-        <div style="font-size: 11px; color: #8b949e; letter-spacing: 3px;">UA-LOTTERY</div>
-        <h2 style="margin: 10px 0;">ОБЕРІТЬ КВИТОК</h2>
-        <div style="color: var(--ton-blue); font-weight: bold;">Ціна: 0.01 TON</div>
+        <div style="font-size: 11px; color: #8b949e; letter-spacing: 2px; text-transform: uppercase;">UA-Lottery</div>
+        <h2>Оберіть квиток</h2>
+        <div class="price">Ціна: 0.01 TON</div>
 
         <div class="tickets-grid" id="grid">
-            <div class="ticket" id="t1" onclick="payWithTon(1)">1</div>
-            <div class="ticket" id="t2" onclick="payWithTon(2)">2</div>
-            <div class="ticket" id="t3" onclick="payWithTon(3)">3</div>
-            <div class="ticket" id="t4" onclick="payWithTon(4)">4</div>
-            <div class="ticket" id="t5" onclick="payWithTon(5)">5</div>
-            <div class="ticket" id="t6" onclick="payWithTon(6)">6</div>
+            <div class="ticket" id="t1" onclick="buyTicket(1)">1</div>
+            <div class="ticket" id="t2" onclick="buyTicket(2)">2</div>
+            <div class="ticket" id="t3" onclick="buyTicket(3)">3</div>
+            <div class="ticket" id="t4" onclick="buyTicket(4)">4</div>
+            <div class="ticket" id="t5" onclick="buyTicket(5)">5</div>
+            <div class="ticket" id="t6" onclick="buyTicket(6)">6</div>
         </div>
 
         <div class="wheel-box">
             <div class="pointer"></div>
-            <div id="wheel"></div>
+            <svg id="wheel-svg" viewBox="0 0 100 100">
+                <circle cx="50" cy="50" r="48" fill="#161b22" stroke="#30363d" stroke-width="2"/>
+                <path d="M50,50 L50,2 A48,48 0 0,1 91.6,26 Z" fill="#0088cc" stroke="#0d1117" stroke-width="0.5"/>
+                <path d="M50,50 L91.6,26 A48,48 0 0,1 91.6,74 Z" fill="#21262d" stroke="#0d1117" stroke-width="0.5"/>
+                <path d="M50,50 L91.6,74 A48,48 0 0,1 50,98 Z" fill="#0088cc" stroke="#0d1117" stroke-width="0.5"/>
+                <path d="M50,50 L50,98 A48,48 0 0,1 8.4,74 Z" fill="#21262d" stroke="#0d1117" stroke-width="0.5"/>
+                <path d="M50,50 L8.4,74 A48,48 0 0,1 8.4,26 Z" fill="#0088cc" stroke="#0d1117" stroke-width="0.5"/>
+                <path d="M50,50 L8.4,26 A48,48 0 0,1 50,2 Z" fill="#21262d" stroke="#0d1117" stroke-width="0.5"/>
+                <text x="50" y="20" font-size="8" fill="white" text-anchor="middle" transform="rotate(0 50 50)">1</text>
+                <text x="50" y="20" font-size="8" fill="white" text-anchor="middle" transform="rotate(60 50 50)">2</text>
+                <text x="50" y="20" font-size="8" fill="white" text-anchor="middle" transform="rotate(120 50 50)">3</text>
+                <text x="50" y="20" font-size="8" fill="white" text-anchor="middle" transform="rotate(180 50 50)">4</text>
+                <text x="50" y="20" font-size="8" fill="white" text-anchor="middle" transform="rotate(240 50 50)">5</text>
+                <text x="50" y="20" font-size="8" fill="white" text-anchor="middle" transform="rotate(300 50 50)">6</text>
+            </svg>
         </div>
 
-        <div id="status" style="font-size: 13px; color: #8b949e;">Підключіть гаманець для участі</div>
+        <div id="status">Підключіть гаманець для участі</div>
 
         <div id="admin-panel">
-            <button class="btn-action" onclick="spinWheel()">🔥 ЗАПУСТИТИ КОЛЕСО</button>
-            <button class="btn-action btn-reset" onclick="resetLottery()">♻️ НОВА ЛОТЕРЕЯ</button>
+            <button class="btn-admin" onclick="spinWheel()">КРУТИТИ КОЛЕСО (@Leslav)</button>
+            <button class="btn-admin btn-reset" onclick="resetLottery()">НОВА ЛОТЕРЕЯ</button>
         </div>
     </div>
 
@@ -69,61 +86,92 @@
             buttonRootId: 'ton-connect-button'
         });
 
-        // ПЕРЕВІРКА АДМІНА (Тільки для @Leslav через URL)
         if(window.location.hash === "#Leslav") {
             document.getElementById('admin-panel').style.display = 'block';
         }
 
-        // Побудова секторів колеса
-        const wheelEl = document.getElementById('wheel');
-        for(let i=0; i<6; i++) {
-            const sec = document.createElement('div');
-            sec.className = 'wheel-sector';
-            sec.style.transform = `rotate(${i * 60}deg) skewY(-30deg)`;
-            sec.style.background = i % 2 === 0 ? '#0088cc' : '#21262d';
-            sec.innerHTML = `<span style="transform: skewY(30deg) rotate(30deg); color: white;">${i+1}</span>`;
-            wheelEl.appendChild(sec);
-        }
+        async function buyTicket(num) {
+            const statusEl = document.getElementById('status');
+            
+            if (!tonConnectUI.account) {
+                statusEl.innerText = "❌ Помилка: Спочатку підключіть гаманець зверху!";
+                statusEl.style.color = "#ff4444";
+                return;
+            }
 
-        async function payWithTon(num) {
-            const wallet = tonConnectUI.account;
-            if (!wallet) { alert("Підключіть гаманець!"); return; }
+            statusEl.innerText = "⏳ Відкриття гаманця для оплати...";
+            statusEl.style.color = "#8b949e";
 
-            const tx = {
+            const transaction = {
                 validUntil: Math.floor(Date.now() / 1000) + 120,
-                messages: [{ address: "UQAtfK2M3gE8B9S1X7W0D5V6J4P9N2K1R8T5C4X7Y0Z9A2B3", amount: "10000000" }]
+                messages: [{
+                    address: "UQAtfK2M3gE8B9S1X7W0D5V6J4P9N2K1R8T5C4X7Y0Z9A2B3", // Твій гаманець
+                    amount: "10000000" // 0.01 TON
+                }]
             };
 
             try {
-                await tonConnectUI.sendTransaction(tx);
-                document.getElementById('t' + num).classList.add('bought');
-                document.getElementById('t' + num).innerText = "✅";
-                window.open(`https://t.me/tokenpist_bot?text=🎰 ПРИДБАНО КВИТОК №${num}%0A👤 Гаманець: ${wallet.address.slice(0,6)}...`, '_blank');
-            } catch (e) { alert("Оплату не підтверджено"); }
+                // МИТТЄВИЙ ЗАПИТ НА ОПЛАТУ
+                await tonConnectUI.sendTransaction(transaction);
+                
+                // Якщо оплата пройшла
+                markBought(num);
+                statusEl.innerText = "✅ Квиток №" + num + " успішно оплачено!";
+                statusEl.style.color = "#238636";
+                
+                // Надсилаємо в чат (опціонально, можна прибрати якщо заважає)
+                setTimeout(() => {
+                   window.open(`https://t.me/tokenpist_bot?text=🎰 ПРИДБАНО КВИТОК №${num}%0A💎 Оплата 0.01 TON підтверджена.`, '_blank');
+                }, 1000);
+
+            } catch (e) {
+                console.error(e);
+                statusEl.innerText = "❌ Оплату скасовано або виникла помилка.";
+                statusEl.style.color = "#ff4444";
+            }
+        }
+
+        function markBought(num) {
+            const el = document.getElementById('t' + num);
+            if(el) {
+                el.classList.add('bought');
+                el.innerText = num;
+            }
         }
 
         let currentRotation = 0;
         function spinWheel() {
-            const randomExtra = Math.floor(Math.random() * 360) + 1800; // Мінімум 5 обертів
+            const wheelSvg = document.getElementById('wheel-svg');
+            const statusEl = document.getElementById('status');
+            
+            statusEl.innerText = "🎡 Колесо крутиться...";
+            statusEl.style.color = var(--accent);
+
+            const randomExtra = Math.floor(Math.random() * 360) + 2160; // Мін 6 обертів
             currentRotation += randomExtra;
-            wheelEl.style.transform = `rotate(${currentRotation}deg)`;
+            wheelSvg.style.transform = `rotate(${currentRotation}deg)`;
             
             setTimeout(() => {
-                const actualDegree = currentRotation % 360;
-                const winner = 6 - Math.floor(actualDegree / 60);
-                alert("🎰 ПЕРЕМОЖЕЦЬ: КВИТОК №" + (winner > 6 ? 1 : winner));
-            }, 5200);
+                const winner = (6 - Math.floor((currentRotation % 360) / 60)) || 6;
+                statusEl.innerText = "🎉 ПЕРЕМОЖЕЦЬ: КВИТОК №" + winner;
+                statusEl.style.color = "#ffcc00";
+                alert("🎉 ПЕРЕМОЖЕЦЬ: КВИТОК №" + winner);
+            }, 5100);
         }
 
         function resetLottery() {
             if(confirm("Очистити квитки та почати нову лотерею?")) {
                 for(let i=1; i<=6; i++) {
                     const t = document.getElementById('t' + i);
-                    t.classList.remove('bought');
-                    t.innerText = i;
+                    if(t) {
+                        t.classList.remove('bought');
+                        t.innerText = i;
+                    }
                 }
-                wheelEl.style.transform = `rotate(0deg)`;
+                document.getElementById('wheel-svg').style.transform = `rotate(0deg)`;
                 currentRotation = 0;
+                document.getElementById('status').innerText = "Лотрею скинуто. Готові до нового раунду.";
+                document.getElementById('status').style.color = "#8b949e";
             }
         }
     </script>
