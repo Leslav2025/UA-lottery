@@ -62,10 +62,10 @@
 
         tonUI.onStatusChange(wallet => {
             if (wallet && wallet.account.address) {
-                const addr = wallet.account.address.toLowerCase();
                 document.getElementById('status').innerText = "Гаманець підключено";
+                const addr = wallet.account.address.toLowerCase();
                 
-                // Перевірка ВАШОГО гаманця RtWw (і в raw-форматі)
+                // Перевірка ВАШОГО гаманця RtWw
                 if (addr.includes("rtww") || addr.includes("34de4aca")) {
                     document.getElementById('admin').style.display = 'block';
                 }
@@ -83,7 +83,7 @@
                     messages: [{ address: "UQAtfK2M3gE8B9S1X7W0D5V6J4P9N2K1R8T5C4X7Y0Z9A2B3", amount: "10000000" }]
                 });
                 document.getElementById('t'+n).classList.add('active');
-            } catch(e) { alert("Транзакція скасована"); }
+            } catch(e) { alert("Скасовано"); }
         }
 
         let rot = 0;
