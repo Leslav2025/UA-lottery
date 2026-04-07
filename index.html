@@ -1,94 +1,39 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>UA-Lottery PRO</title>
-    <script src="https://unpkg.com/@tonconnect/ui@latest/dist/tonconnect-ui.min.js"></script>
-    <style>
-        body { font-family: sans-serif; text-align: center; background: #0088cc; color: white; padding: 20px; margin: 0; }
-        #ton-connect-button { display: flex; justify-content: center; margin-bottom: 20px; }
-        .grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
-        .ticket { 
-            width: 85px; height: 110px; background: white; color: #0088cc; 
-            border-radius: 12px; display: flex; align-items: center; 
-            justify-content: center; font-weight: bold; cursor: pointer; 
-            border: 3px solid gold; box-shadow: 0 4px 10px rgba(0,0,0,0.3); 
-        }
-        .ticket.bought { background: #444 !important; color: #888 !important; border-color: #222 !important; pointer-events: none; }
-        #status { font-weight: bold; margin: 15px 0; color: #ffd700; min-height: 24px; }
-        #admin-btn { display: none; margin-top: 30px; padding: 10px; background: red; color: white; border: 2px solid white; border-radius: 8px; cursor: pointer; }
-    </style>
-</head>
-<body>
-    <h2>🎰 UA-Lottery TON</h2>
-    
-    <div id="ton-connect-button"></div>
-    <div id="status">ПОДКЛЮЧИТЕ КОШЕЛЕК</div>
-
-    <div class="grid" id="container"></div>
-
-    <button id="admin-btn" onclick="localStorage.clear(); location.reload();">СБРОСИТЬ ВСЕ (АДМИН)</button>
-
-<script>
-    const MY_WALLET = "UQDXq1iAqu88tVRG62_k03kAXELu_1gzRBMye-VZoFRIRtWw";
-    let isPaid = false;
-
-    // Инициализация TON Connect
-    const tonConnectUI = new TONConnectUI.TonConnectUI({
-        manifestUrl: 'https://leslav2025.github.io/UA-lottery/tonconnect-manifest.json',
-        buttonRootId: 'ton-connect-button'
-    });
-
-    tonConnectUI.onStatusChange(wallet => {
-        if (wallet) {
-            document.getElementById('status').innerText = "ВЫБИРАЙ БИЛЕТ";
-            // Проверка на админа
-            if (wallet.account.address.toLowerCase().includes(MY_WALLET.toLowerCase().substring(2, 10))) {
-                document.getElementById('admin-btn').style.display = 'inline-block';
-            }
-        }
-    });
-
-    // Твоя рабочая функция транзакции
-    async function buyTicket(index) {
+async function buyTicket() {
         if (!tonConnectUI.connected) return alert('Кошелек не на связи!');
         try {
             const transaction = {
                 validUntil: Math.floor(Date.now() / 1000) + 300,
-                messages: [{ 
-                    address: MY_WALLET, 
-                    amount: (0.01 * 1000000000).toString() // Цена 0.01 TON
-                }]
+                messages: [{ address: MY_WALLET, amount: (0.02 * 1000000000).toString() }]
             };
-            
             document.getElementById('status').innerText = "ПРОВЕРЯЕМ ОПЛАТУ...";
             await tonConnectUI.sendTransaction(transaction);
             
             isPaid = true;
-            document.getElementById('status').innerText = "ФАРТУ МАСТИ! БИЛЕТ ВАШ";
-            
-            // Сохраняем купленный билет
-            localStorage.setItem('t' + index, 'true');
-            
-            setTimeout(() => { location.reload(); }, 2000);
-        } catch (e) { 
-            document.getElementById('status').innerText = "ОПЛАТА НЕ ПРОШЛА"; 
-        }
+            document.getElementById('deck').classList.add('active');
+            document.getElementById('buy-btn').style.display = 'none';
+            document.getElementById('status').innerText = "ФАРТУ МАСТИ! ВЫБИРАЙ КАРТУ";
+        } catch (e) { document.getElementById('status').innerText = "ОПЛАТА НЕ ПРОШЛА"; }
     }
 
-    // Отрисовка билетов
-    const container = document.getElementById('container');
-    for (let i = 1; i <= 5; i++) {
-        const t = document.createElement('div');
-        const sold = localStorage.getItem('t' + i);
-        t.className = 'ticket' + (sold ? ' bought' : '');
-        t.innerHTML = sold ? 'Куплено<br>#' + i : 'Билет<br>#' + i;
-        
-        t.onclick = () => {
-            if (!sold) buyTicket(i);
-        };
-        container.appendChild(t);
+    function chooseCard(index) {
+        if (!isPaid) return;
+        isPaid = false;
+
+        const shuffled = resultsPool.sort(() => Math.random() - 0.5);
+        const cards = document.querySelectorAll('.card');
+        cards[index].classList.add('flipped');
+        cards[index].innerText = shuffled[index];
+
+        if (shuffled[index] === '💰') {
+            document.getElementById('status').innerText = "КРАСАВА! КУШ ТВОЙ!";
+            let currentLoot = parseFloat(localStorage.getItem('user_loot') || '0');
+            localStorage.setItem('user_loot', (currentLoot + 0.1).toFixed(3)); // Выигрыш
+        } else {
+            document.getElementById('status').innerText = "МАСЛИНА...";
+            document.getElementById('status').style.color = "#ff0055";
+        }
+        updateDisplay();
+        setTimeout(() => { location.reload(); }, 2500);
     }
 </script>
 </body>
