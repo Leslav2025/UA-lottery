@@ -3,7 +3,7 @@
 <head>
     <title>UA-Lottery TON</title>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
         body { font-family: 'Segoe UI', sans-serif; text-align: center; background: #0088cc; color: white; padding: 15px; margin: 0; }
         .ticket-container { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 20px; }
@@ -12,33 +12,27 @@
             border-radius: 12px; display: flex; flex-direction: column; 
             justify-content: center; align-items: center; cursor: pointer;
             font-weight: bold; border: 3px solid #ffd700; transition: 0.2s;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
         }
-        .ticket.bought { background: #555 !important; border-color: #333 !important; color: #999 !important; opacity: 0.7; pointer-events: none; }
-        .ticket b { font-size: 1.6em; }
-        .info { background: rgba(255,255,255,0.15); padding: 15px; border-radius: 15px; margin: 10px; border: 1px solid rgba(255,255,255,0.3); }
-        .prize { color: #ffd700; font-size: 1.3em; font-weight: bold; margin-top: 5px; }
-        .reset-btn { margin-top: 50px; background: none; border: 1px solid rgba(255,255,255,0.3); color: white; padding: 8px 15px; border-radius: 8px; font-size: 0.7em; cursor: pointer; display: none; }
+        .ticket.bought { background: #555 !important; color: #999 !important; pointer-events: none; }
+        .info { background: rgba(255,255,255,0.15); padding: 15px; border-radius: 15px; margin: 10px; }
+        .prize { color: #ffd700; font-size: 1.3em; font-weight: bold; }
+        #adminBtn { display: none; margin-top: 30px; padding: 10px; background: red; color: white; border: none; border-radius: 5px; cursor: pointer; }
     </style>
 </head>
 <body>
     <h1>🎰 UA-Lottery TON</h1>
-    
     <div class="info">
-        <div>Ціна квитка: <b>0.01 TON</b></div>
+        <div>Ціна: <b>0.01 TON</b></div>
         <div class="prize">Виграш: 0.03 TON 🏆</div>
     </div>
-
-    <p>Оберіть свій щасливий квиток:</p>
-    
     <div class="ticket-container" id="tickets"></div>
 
-    <button id="adminBtn" class="reset-btn" onclick="resetLotto()">Скинути квитки (АДМІН)</button>
+    <button id="adminBtn" onclick="localStorage.clear(); location.reload();">Скинути квитки (АДМІН)</button>
 
     <script>
-        const wallet = "UQDXq1iAqu88tVRG62_k03kAXELu_1gzRBMye-VZoFRIRtWw"; // Твоя адреса
-        const ticketsContainer = document.getElementById('tickets');
-
+        const wallet = "UQDXq1iAqu88tVRG62_k03kAXELu_1gzRBMye-VZoFRIRtWw";
+        
+        // Показуємо адмін-кнопку завжди, якщо є ?admin
         if (window.location.search.includes('admin')) {
             document.getElementById('adminBtn').style.display = 'inline-block';
         }
@@ -55,26 +49,14 @@
 
             t.onclick = function() {
                 const amount = 10000000; // 0.01 TON
-                const comment = "Ticket_" + i;
+                // Універсальне посилання для вибору гаманця
+                const payLink = `https://tonkeeper.app/transfer/${wallet}?amount=${amount}&text=Ticket_${i}`;
                 
-                // Цей формат відкриває список доступних гаманців у системі
-                const universalLink = `https://ton.org/transfer/${wallet}?amount=${amount}&text=${comment}`;
-                
-                // Важливо: використовуємо window.open, щоб вийти за межі Mini App
-                window.open(universalLink, '_blank');
-
+                window.location.href = payLink;
                 localStorage.setItem('ticket_' + i, 'true');
-                this.classList.add('bought');
-                this.innerHTML = `<span>Куплено</span><b>#${i}</b>`;
-            };
-            ticketsContainer.appendChild(t);
-        }
-
-        function resetLotto() {
-            if(confirm('Скинути всі квитки?')) {
-                localStorage.clear();
                 location.reload();
-            }
+            };
+            document.getElementById('tickets').appendChild(t);
         }
     </script>
 </body>
