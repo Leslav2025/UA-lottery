@@ -3,32 +3,33 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>UA-LOTTERY — TON Edition</title>
+    <title>UA-LOTTERY — Колесо Фортуни</title>
     <script src="https://unpkg.com/@tonconnect/ui@latest/dist/tonconnect-ui.min.js"></script>
     <style>
         :root { --accent: #0088cc; --bg: #0d1117; --card: #161b22; --border: #30363d; --ton-blue: #0088cc; }
-        body { background: var(--bg); color: white; font-family: 'Segoe UI', sans-serif; text-align: center; padding: 20px; }
+        body { background: var(--bg); color: white; font-family: 'Segoe UI', sans-serif; text-align: center; padding: 20px; margin: 0; }
         
-        /* Кнопка підключення гаманця */
-        #ton-connect-button { display: flex; justify-content: center; margin-bottom: 20px; }
-
-        .lottery-container { max-width: 400px; margin: 0 auto; background: var(--card); border: 1px solid var(--border); padding: 20px; border-radius: 20px; }
+        #ton-connect-button { display: flex; justify-content: center; margin: 20px 0; }
+        .lottery-container { max-width: 400px; margin: 0 auto; background: var(--card); border: 1px solid var(--border); padding: 25px; border-radius: 25px; }
         
-        /* Слот-машина квитків */
-        .tickets-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin: 20px 0; }
+        /* Квитки */
+        .tickets-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 20px 0; }
         .ticket { 
-            background: #21262d; border: 2px solid var(--border); padding: 20px; 
-            border-radius: 15px; font-size: 24px; font-weight: bold; cursor: pointer; 
-            transition: 0.3s; color: white;
+            background: #21262d; border: 2px solid var(--border); padding: 20px 5px; 
+            border-radius: 15px; font-size: 22px; font-weight: bold; cursor: pointer; transition: 0.3s; 
         }
-        .ticket:hover { border-color: var(--ton-blue); transform: translateY(-3px); }
-        .ticket.bought { background: var(--ton-blue); border-color: white; color: white; box-shadow: 0 0 15px var(--ton-blue); }
+        .ticket.bought { background: var(--ton-blue); border-color: white; box-shadow: 0 0 15px var(--ton-blue); pointer-events: none; }
 
-        .price-tag { color: var(--ton-blue); font-size: 18px; margin-bottom: 10px; }
-        
+        /* Колесо Фортуни */
+        .wheel-box { position: relative; width: 260px; height: 260px; margin: 30px auto; border: 8px solid var(--border); border-radius: 50%; box-shadow: 0 0 20px rgba(0,0,0,0.5); overflow: hidden; }
+        #wheel { width: 100%; height: 100%; border-radius: 50%; transition: transform 5s cubic-bezier(0.15, 0, 0.15, 1); position: relative; }
+        .wheel-sector { position: absolute; width: 50%; height: 50%; transform-origin: 100% 100%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 18px; border: 1px solid var(--bg); }
+        .pointer { position: absolute; top: -10px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 15px solid transparent; border-right: 15px solid transparent; border-top: 30px solid #ff4444; z-index: 10; }
+
         /* Адмінка */
-        .admin-controls { margin-top: 30px; padding: 15px; border: 1px dashed #ff4444; border-radius: 15px; display: none; }
-        .btn-admin { background: #ff4444; color: white; border: none; padding: 10px; border-radius: 8px; cursor: pointer; margin: 5px; }
+        #admin-panel { display: none; margin-top: 25px; padding: 15px; border: 2px dashed #ffcc00; border-radius: 20px; }
+        .btn-action { background: #238636; color: white; border: none; padding: 15px; border-radius: 12px; font-weight: bold; cursor: pointer; width: 100%; margin-bottom: 10px; }
+        .btn-reset { background: #ff4444; }
     </style>
 </head>
 <body>
@@ -36,9 +37,9 @@
     <div id="ton-connect-button"></div>
 
     <div class="lottery-container">
-        <h1>UA-LOTTERY</h1>
-        <div class="price-tag">Ціна квитка: <b>0.1 TON</b></div>
-        <p>Оберіть вільний слот:</p>
+        <div style="font-size: 11px; color: #8b949e; letter-spacing: 3px;">UA-LOTTERY</div>
+        <h2 style="margin: 10px 0;">ОБЕРІТЬ КВИТОК</h2>
+        <div style="color: var(--ton-blue); font-weight: bold;">Ціна: 0.01 TON</div>
 
         <div class="tickets-grid" id="grid">
             <div class="ticket" id="t1" onclick="payWithTon(1)">1</div>
@@ -49,73 +50,80 @@
             <div class="ticket" id="t6" onclick="payWithTon(6)">6</div>
         </div>
 
-        <div id="status">Будь ласка, підключіть гаманець</div>
-    </div>
+        <div class="wheel-box">
+            <div class="pointer"></div>
+            <div id="wheel"></div>
+        </div>
 
-    <div class="admin-controls" id="adminZone">
-        <h4>КЕРУВАННЯ</h4>
-        <button class="btn-admin" onclick="resetSlots()">Очистити квитки</button>
-        <button class="btn-admin" style="background: #238636;" onclick="alert('Колесо запущено!')">Крутити колесо</button>
+        <div id="status" style="font-size: 13px; color: #8b949e;">Підключіть гаманець для участі</div>
+
+        <div id="admin-panel">
+            <button class="btn-action" onclick="spinWheel()">🔥 ЗАПУСТИТИ КОЛЕСО</button>
+            <button class="btn-action btn-reset" onclick="resetLottery()">♻️ НОВА ЛОТЕРЕЯ</button>
+        </div>
     </div>
 
     <script>
-        // Налаштування TON Connect
         const tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
             manifestUrl: 'https://leslav2025.github.io/UA-lottery/tonconnect-manifest.json',
             buttonRootId: 'ton-connect-button'
         });
 
-        // Адмін-логіка
-        if(window.location.hash === "#admin") {
-            document.getElementById('adminZone').style.display = 'block';
+        // ПЕРЕВІРКА АДМІНА (Тільки для @Leslav через URL)
+        if(window.location.hash === "#Leslav") {
+            document.getElementById('admin-panel').style.display = 'block';
         }
 
-        async function payWithTon(ticketNum) {
-            const wallet = tonConnectUI.account;
-            if (!wallet) {
-                alert("Спочатку підключіть TON-гаманець!");
-                return;
-            }
+        // Побудова секторів колеса
+        const wheelEl = document.getElementById('wheel');
+        for(let i=0; i<6; i++) {
+            const sec = document.createElement('div');
+            sec.className = 'wheel-sector';
+            sec.style.transform = `rotate(${i * 60}deg) skewY(-30deg)`;
+            sec.style.background = i % 2 === 0 ? '#0088cc' : '#21262d';
+            sec.innerHTML = `<span style="transform: skewY(30deg) rotate(30deg); color: white;">${i+1}</span>`;
+            wheelEl.appendChild(sec);
+        }
 
-            const transaction = {
-                validUntil: Math.floor(Date.now() / 1000) + 60, // 60 секунд
-                messages: [
-                    {
-                        address: "ВАША_АДРЕСА_TON_ГАМАНЦЯ", // ЗАМІНИ НА СВІЙ
-                        amount: "100000000", // 0.1 TON у нанотонах
-                        payload: "" // Можна додати коментар "Ticket 1"
-                    }
-                ]
+        async function payWithTon(num) {
+            const wallet = tonConnectUI.account;
+            if (!wallet) { alert("Підключіть гаманець!"); return; }
+
+            const tx = {
+                validUntil: Math.floor(Date.now() / 1000) + 120,
+                messages: [{ address: "UQAtfK2M3gE8B9S1X7W0D5V6J4P9N2K1R8T5C4X7Y0Z9A2B3", amount: "10000000" }]
             };
 
             try {
-                const result = await tonConnectUI.sendTransaction(transaction);
-                // Якщо оплата пройшла:
-                markAsBought(ticketNum);
-                notifyTelegram(ticketNum, wallet.address);
-            } catch (e) {
-                console.error(e);
-                alert("Оплата скасована або помилка.");
-            }
+                await tonConnectUI.sendTransaction(tx);
+                document.getElementById('t' + num).classList.add('bought');
+                document.getElementById('t' + num).innerText = "✅";
+                window.open(`https://t.me/tokenpist_bot?text=🎰 ПРИДБАНО КВИТОК №${num}%0A👤 Гаманець: ${wallet.address.slice(0,6)}...`, '_blank');
+            } catch (e) { alert("Оплату не підтверджено"); }
         }
 
-        function markAsBought(num) {
-            const el = document.getElementById('t' + num);
-            el.classList.add('bought');
-            el.innerText = "💸";
+        let currentRotation = 0;
+        function spinWheel() {
+            const randomExtra = Math.floor(Math.random() * 360) + 1800; // Мінімум 5 обертів
+            currentRotation += randomExtra;
+            wheelEl.style.transform = `rotate(${currentRotation}deg)`;
+            
+            setTimeout(() => {
+                const actualDegree = currentRotation % 360;
+                const winner = 6 - Math.floor(actualDegree / 60);
+                alert("🎰 ПЕРЕМОЖЕЦЬ: КВИТОК №" + (winner > 6 ? 1 : winner));
+            }, 5200);
         }
 
-        function notifyTelegram(num, address) {
-            const shortAddr = address.substring(0, 6) + "..." + address.substring(address.length - 4);
-            const msg = `🎰 НОВИЙ КВИТОК!%0A🎫 Номер: ${num}%0A👤 Гаманець: ${shortAddr}%0A💎 Статус: Оплачено в TON`;
-            window.open(`https://t.me/tokenpist_bot?text=${msg}`, '_blank');
-        }
-
-        function resetSlots() {
-            for(let i=1; i<=6; i++) {
-                const el = document.getElementById('t' + i);
-                el.classList.remove('bought');
-                el.innerText = i;
+        function resetLottery() {
+            if(confirm("Очистити квитки та почати нову лотерею?")) {
+                for(let i=1; i<=6; i++) {
+                    const t = document.getElementById('t' + i);
+                    t.classList.remove('bought');
+                    t.innerText = i;
+                }
+                wheelEl.style.transform = `rotate(0deg)`;
+                currentRotation = 0;
             }
         }
     </script>
