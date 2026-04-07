@@ -5,18 +5,19 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
-        body { font-family: 'Segoe UI', sans-serif; text-align: center; background: #0088cc; color: white; padding: 15px; }
+        body { font-family: 'Segoe UI', sans-serif; text-align: center; background: #0088cc; color: white; padding: 15px; margin: 0; }
         .ticket-container { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 20px; }
         .ticket { 
-            width: 80px; height: 110px; background: white; color: #0088cc; 
-            border-radius: 10px; display: flex; flex-direction: column; 
+            width: 85px; height: 115px; background: white; color: #0088cc; 
+            border-radius: 12px; display: flex; flex-direction: column; 
             justify-content: center; align-items: center; cursor: pointer;
-            font-weight: bold; border: 3px solid #ffd700; transition: 0.3s;
+            font-weight: bold; border: 3px solid #ffd700; transition: 0.2s;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
         }
-        .ticket.bought { background: #ccc; border-color: #888; color: #666; opacity: 0.6; pointer-events: none; }
-        .ticket b { font-size: 1.5em; }
-        .info { background: rgba(255,255,255,0.1); padding: 15px; border-radius: 15px; margin-bottom: 20px; }
-        .prize { color: #ffd700; font-size: 1.2em; font-weight: bold; }
+        .ticket.bought { background: #555; border-color: #333; color: #999; opacity: 0.7; pointer-events: none; }
+        .ticket b { font-size: 1.6em; }
+        .info { background: rgba(255,255,255,0.15); padding: 15px; border-radius: 15px; margin: 10px; }
+        .prize { color: #ffd700; font-size: 1.3em; font-weight: bold; margin-top: 5px; }
     </style>
 </head>
 <body>
@@ -29,8 +30,7 @@
 
     <p>Оберіть свій щасливий квиток:</p>
     
-    <div class="ticket-container" id="tickets">
-        </div>
+    <div class="ticket-container" id="tickets"></div>
 
     <script>
         const wallet = "UQDXq1iAqu88tVRG62_k03kAXELu_1gzRBMye-VZoFRIRtWw";
@@ -41,18 +41,19 @@
             t.className = 'ticket';
             t.innerHTML = `<span>Квиток</span><b>#${i}</b>`;
             
-            // Перевірка чи купив користувач цей квиток раніше
             if (localStorage.getItem('ticket_' + i)) {
                 t.classList.add('bought');
                 t.innerHTML = `<span>Куплено</span><b>#${i}</b>`;
             }
 
             t.onclick = function() {
-                // Посилання на оплату (0.01 TON = 10000000 нанотон)
-                const payLink = `ton://transfer/${wallet}?amount=10000000&text=Ticket_${i}`;
-                window.location.href = payLink;
+                // Використовуємо універсальне посилання Tonkeeper, щоб уникнути помилки
+                const amount = 10000000; // 0.01 TON
+                const comment = "Ticket_" + i;
+                const universalLink = `https://app.tonkeeper.com/transfer/${wallet}?amount=${amount}&text=${comment}`;
                 
-                // Позначаємо як куплений (для цього користувача)
+                window.open(universalLink, '_blank');
+                
                 localStorage.setItem('ticket_' + i, 'true');
                 t.classList.add('bought');
                 t.innerHTML = `<span>Куплено</span><b>#${i}</b>`;
@@ -60,9 +61,5 @@
             ticketsContainer.appendChild(t);
         }
     </script>
-
-    <p style="font-size: 0.7em; margin-top: 40px; opacity: 0.8;">
-        Гаманець для виплат: <br> ${wallet}
-    </p>
 </body>
 </html>
