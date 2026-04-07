@@ -3,7 +3,7 @@
 <head>
     <title>UA-Lottery TON</title>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <style>
         body { font-family: 'Segoe UI', sans-serif; text-align: center; background: #0088cc; color: white; padding: 15px; margin: 0; }
         .ticket-container { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 20px; }
@@ -16,9 +16,9 @@
         }
         .ticket.bought { background: #555 !important; border-color: #333 !important; color: #999 !important; opacity: 0.7; pointer-events: none; }
         .ticket b { font-size: 1.6em; }
-        .info { background: rgba(255,255,255,0.15); padding: 15px; border-radius: 15px; margin: 10px; }
+        .info { background: rgba(255,255,255,0.15); padding: 15px; border-radius: 15px; margin: 10px; border: 1px solid rgba(255,255,255,0.3); }
         .prize { color: #ffd700; font-size: 1.3em; font-weight: bold; margin-top: 5px; }
-        .reset-btn { margin-top: 50px; background: none; border: 1px solid rgba(255,255,255,0.3); color: white; padding: 8px 15px; border-radius: 8px; font-size: 0.7em; cursor: pointer; opacity: 0.5; }
+        .reset-btn { margin-top: 50px; background: none; border: 1px solid rgba(255,255,255,0.3); color: white; padding: 8px 15px; border-radius: 8px; font-size: 0.7em; cursor: pointer; display: none; }
     </style>
 </head>
 <body>
@@ -33,47 +33,20 @@
     
     <div class="ticket-container" id="tickets"></div>
 
+    <button id="adminBtn" class="reset-btn" onclick="resetLotto()">Скинути квитки (АДМІН)</button>
+
     <script>
         const wallet = "UQDXq1iAqu88tVRG62_k03kAXELu_1gzRBMye-VZoFRIRtWw";
         const ticketsContainer = document.getElementById('tickets');
 
+        // Кнопка тільки для тебе за посиланням ?admin
+        if (window.location.search.includes('admin')) {
+            document.getElementById('adminBtn').style.display = 'inline-block';
+        }
+
         for (let i = 1; i <= 5; i++) {
             let t = document.createElement('div');
             t.className = 'ticket';
-            t.id = 't' + i;
             t.innerHTML = `<span>Квиток</span><b>#${i}</b>`;
             
             if (localStorage.getItem('ticket_' + i)) {
-                t.classList.add('bought');
-                t.innerHTML = `<span>Куплено</span><b>#${i}</b>`;
-            }
-
-            t.onclick = function() {
-                const amount = 10000000; // 0.01 TON
-                const comment = "Ticket_" + i;
-                const transferLink = `https://ton.org/transfer/${wallet}?amount=${amount}&text=${comment}`;
-                
-                window.open(transferLink, '_blank');
-                
-                localStorage.setItem('ticket_' + i, 'true');
-                this.classList.add('bought');
-                this.innerHTML = `<span>Куплено</span><b>#${i}</b>`;
-            };
-            ticketsContainer.appendChild(t);
-        }
-
-        function resetLotto() {
-            if(confirm('Скинути всі куплені квитки для тесту?')) {
-                localStorage.clear();
-                location.reload();
-            }
-        }
-    </script>
-
-    <button class="reset-btn" onclick="resetLotto()">Скинути квитки (тест)</button>
-    
-    <p style="font-size: 0.7em; margin-top: 20px; opacity: 0.6;">
-        Гаманець: UQDXq1iAqu88...tWw
-    </p>
-</body>
-</html>
