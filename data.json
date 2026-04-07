@@ -1,0 +1,22 @@
+{
+  "lottery_name": "UA-Lottery TON",
+  "status": "active",
+  "config": {
+    "ticket_price": 0.5,
+    "currency": "TON",
+    "min_players": 10
+  },
+  "live_data": {
+    "current_bank": 0,
+    "participants_count": 0,
+    "last_draw_number": 0
+  },
+  "wallet": {
+    "address": "UQDXq1iAqu88tVRG62_k03kAXELu_1gzRBMye-VZoFRIRtWw",
+    "comment_required": "LottoUA"
+  },
+  "messages": {
+    "welcome": "🎰 Вітаємо в UA-Lottery TON!\n\nЩоб взяти участь, відправте 0.5 TON на вказаний гаманець.",
+    "how_to_play": "1. Скопіюйте адресу гаманця.\n2. Відправте 0.5 TON.\n3. Очікуйте розіграшу!"
+  }
+}
