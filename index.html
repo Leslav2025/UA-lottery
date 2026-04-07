@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ЛОТЕРЕЯ UA | ОФІЦІЙНА</title>
+    <script src="https://unpkg.com/@tonconnect/ui@latest/dist/tonconnect-ui.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap');
+        
+        body { 
+            margin: 0; 
+            background-color: #f8f9fa; 
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" opacity="0.05"><path d="M50 5 L60 25 L80 30 L65 45 L70 65 L50 55 L30 65 L35 45 L20 30 L40 25 Z" fill="%230057b7"/></svg>');
+            background-repeat: no-repeat;
+            background-position: center;
+            background-size: 80%;
+            color: #333; 
+            font-family: 'Montserrat', sans-serif; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; 
+            height: 100vh; 
+            overflow: hidden; 
+        }
+
+        .header { color: #0057b7; font-size: 26px; font-weight: bold; margin-bottom: 5px; text-transform: uppercase; display: flex; align-items: center; gap: 10px; }
+        .sub-header { color: #ffd700; font-size: 14px; font-weight: bold; background: #0057b7; padding: 4px 15px; border-radius: 8px; margin-bottom: 25px; box-shadow: 0 4px 10px rgba(0,87,183,0.2); }
+        .cards-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; width: 95%; max-width: 450px; filter: grayscale(1) blur(3px); pointer-events: none; transition: 0.6s; }
+        .cards-grid.active { filter: none; pointer-events: auto; }
+        .card { height: 95px; background: #fff; border: 2px solid #0057b7; border-radius: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 28px; transition: 0.4s; box-shadow: 0 4px 8px rgba(0,0,0,0.05); }
+        .card.flipped { transform: rotateY(180deg); background: #ffd700; border-color: #0057b7; }
+        .btn-buy { margin-top: 30px; padding: 20px; background: #0057b7; border: none; color: #fff; border-radius: 15px; cursor: pointer; text-transform: uppercase; font-weight: bold; width: 85%; max-width: 350px; font-size: 18px; box-shadow: 0 6px 20px rgba(0,87,183,0.3); }
+        .status-msg { margin: 15px 0; font-size: 13px; color: #555; font-weight: bold; text-align: center; min-height: 20px; }
+        #ton-connect-btn { margin-top: 15px; }
+    </style>
+</head>
+<body>
+
+    <div class="header"><span style="font-size: 30px;">🔱</span> ЛОТЕРЕЯ UA</div>
+    <div class="sub-header">ОФІЦІЙНИЙ ТИРАЖ</div>
+    <div id="status" class="status-msg">ПІДКЛЮЧІТЬ ГАМАНЕЦЬ ТА КУПІТЬ КВИТОК</div>
+
+    <div class="cards-grid" id="deck">
+        <div class="card" onclick="chooseCard(0)">🇺🇦</div>
+        <div class="card" onclick="chooseCard(1)">🇺🇦</div>
+        <div class="card" onclick="chooseCard(2)">🇺🇦</div>
+        <div class="card" onclick="chooseCard(3)">🇺🇦</div>
+        <div class="card" onclick="chooseCard(4)">🇺🇦</div>
+        <div class="card" onclick="chooseCard(5)">🇺🇦</div>
+        <div class="card" onclick="chooseCard(6)">🇺🇦</div>
+        <div class="card" onclick="chooseCard(7)">🇺🇦</div>
+        <div class="card" onclick="chooseCard(8)">🇺🇦</div>
+        <div class="card" onclick="chooseCard(9)">🇺🇦</div>
+    </div>
+
+    <button id="buy-btn" class="btn-buy" onclick="buyTicket()">КУПИТИ КВИТОК (0.02 TON)</button>
+    <div id="ton-connect-btn"></div>
+
+<script>
+    const tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
+        manifestUrl: 'https://leslav2025.github.io/UA-lottery/tonconnect-manifest.json',
+        buttonRootId: 'ton-connect-btn'
+    });
+
+    const MY_WALLET = "UQDXq1iAqu88tVRG62_k03kAXELu_1gzRBMye-VZoFRIRtWw";
+    const TG_TOKEN = "8354166356:AAFWy5svHiktcWtGlCh-OZ4JvmHsnOopzzc";
+    const TG_CHAT_ID = "-1001451233135";
+    
+    let isPaid = false;
+    const resultsPool = ['💎', '💎', '💨', '💨', '💨', '💨', '💨', '💨', '💨', '💨'];
+
+    async function sendWinToTelegram(wallet) {
+        const text = `🏆 ПЕРЕМОЖЕЦЬ У ЛОТЕРЕЇ UA!\n\n💰 Виграш: 0.15 TON\n👤 Гаманець: ${wallet}\n\nПотрібно надіслати виплату!`;
+        const url = `https://api.telegram.org/bot${TG_TOKEN}/sendMessage?chat_id=${TG_CHAT_ID}&text=${encodeURIComponent(text)}`;
+        try { await fetch(url); } catch (e) { console.error("TG Error", e); }
+    }
+
+    async function buyTicket() {
+        if (!tonConnectUI.connected) return alert('Будь ласка, підключіть TON гаманець!');
+        try {
+            const transaction = {
+                validUntil: Math.floor(Date.now() / 1000) + 300,
+                messages: [{ address: MY_WALLET, amount: (0.02 * 1000000000).toString() }]
+            };
+            document.getElementById('status').innerText = "ОБРОБКА ПЛАТЕЖУ...";
+            await tonConnectUI.sendTransaction(transaction);
+            
+            isPaid = true;
+            document.getElementById('deck').classList.add('active');
+            document.getElementById('buy-btn').style.display = 'none';
+            document.getElementById('status').innerText = "ОПЛАЧЕНО! ОБЕРІТЬ ВАШУ КАРТКУ";
+        } catch (e) { 
+            document.getElementById('status').innerText = "ПОМИЛКА ОПЛАТИ"; 
+        }
+    }
+
+    function chooseCard(index) {
+        if (!isPaid) return;
+        isPaid = false;
+
+        const shuffled = resultsPool.sort(() => Math.random() - 0.5);
+        const cards = document.querySelectorAll('.card');
+        cards[index].classList.add('flipped');
+        cards[index].innerText = shuffled[index];
+
+        if (shuffled[index] === '💎') {
+            document.getElementById('status').innerText = "ВІТАЄМО! ВИ ВИГРАЛИ!";
+            const userWallet = tonConnectUI.account?.address || "Невідомий";
+            sendWinToTelegram(userWallet);
+        } else {
+            document.getElementById('status').innerText = "СПРОБУЙТЕ ЩЕ РАЗ!";
+        }
+
+        setTimeout(() => { location.reload(); }, 4000);
+    }
+</script>
+</body>
+</html>
