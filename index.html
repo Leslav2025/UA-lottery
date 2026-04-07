@@ -19,27 +19,41 @@
 <body>
     <div id="ton-connect-button" style="margin-bottom: 20px; display: flex; justify-content: center;"></div>
     <div class="card">
-        <h3>Оберіть квиток (0.01 TON)</h3>
+        <h3 onclick="checkAdmin()">Оберіть квиток (0.01 TON)</h3>
+        
         <div class="grid">
             <div class="t" id="t1" onclick="pay(1)">1</div><div class="t" id="t2" onclick="pay(2)">2</div><div class="t" id="t3" onclick="pay(3)">3</div>
             <div class="t" id="t4" onclick="pay(4)">4</div><div class="t" id="t5" onclick="pay(5)">5</div><div class="t" id="t6" onclick="pay(6)">6</div>
         </div>
+
         <div style="position:relative; width:260px; margin:auto;">
             <div style="position:absolute; top:-10px; left:50%; transform:translateX(-50%); width:0; height:0; border-left:10px solid transparent; border-right:10px solid transparent; border-top:20px solid red; z-index:2;"></div>
             <canvas id="wheel-canvas" width="400" height="400"></canvas>
         </div>
+
         <p id="status" style="font-size:14px; color:#8b949e; margin-top:15px;">Підключіть гаманець</p>
+        
         <div id="admin">
             <p style="color:#2ecc71; font-weight:bold; margin-bottom:10px;">⚙️ ПАНЕЛЬ АДМІНІСТРАТОРА</p>
             <button class="admin-btn" onclick="spin()">КРУТИТИ КОЛЕСО</button>
             <button class="admin-btn" style="background:#da3633" onclick="location.reload()">НОВА ГРА</button>
         </div>
     </div>
+
     <script>
         const tonUI = new TON_CONNECT_UI.TonConnectUI({
             manifestUrl: 'https://leslav2025.github.io/UA-lottery/tonconnect-manifest.json',
             buttonRootId: 'ton-connect-button'
         });
+
+        // Секретна функція активації адмінки
+        let clicks = 0;
+        function checkAdmin() {
+            clicks++;
+            if(clicks >= 3) {
+                document.getElementById('admin').style.display = 'block';
+            }
+        }
 
         const ctx = document.getElementById('wheel-canvas').getContext('2d');
         const colors = ['#0088cc','#1c2128','#0088cc','#1c2128','#0088cc','#1c2128'];
@@ -52,13 +66,8 @@
         }
 
         tonUI.onStatusChange(wallet => {
-            if (wallet && wallet.account.address) {
+            if (wallet) {
                 document.getElementById('status').innerText = "Гаманець підключено";
-                const addr = wallet.account.address.toLowerCase();
-                // НАДІЙНА ПЕРЕВІРКА RtWw ТА ТЕХНІЧНОГО ФОРМАТУ
-                if (addr.includes("rtww") || addr.includes("34de4aca")) {
-                    document.getElementById('admin').style.display = 'block';
-                }
             } else {
                 document.getElementById('status').innerText = "Підключіть гаманець";
                 document.getElementById('admin').style.display = 'none';
@@ -66,14 +75,14 @@
         });
 
         async function pay(n) {
-            if(!tonUI.account) return alert("Спочатку підключіть гаманець!");
+            if(!tonUI.account) return alert("Підключіть гаманець!");
             try {
                 await tonUI.sendTransaction({
                     validUntil: Math.floor(Date.now()/1000) + 300,
                     messages: [{ address: "UQAtfK2M3gE8B9S1X7W0D5V6J4P9N2K1R8T5C4X7Y0Z9A2B3", amount: "10000000" }]
                 });
                 document.getElementById('t'+n).classList.add('active');
-            } catch(e) { alert("Оплата не пройшла"); }
+            } catch(e) { alert("Скасовано"); }
         }
 
         let rot = 0;
