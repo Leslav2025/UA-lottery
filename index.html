@@ -3,7 +3,7 @@
 <head>
     <title>UA-Lottery TON</title>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <style>
         body { font-family: 'Segoe UI', sans-serif; text-align: center; background: #0088cc; color: white; padding: 15px; margin: 0; }
         .ticket-container { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 20px; }
@@ -13,10 +13,10 @@
             justify-content: center; align-items: center; cursor: pointer;
             font-weight: bold; border: 3px solid #ffd700; transition: 0.2s;
         }
-        .ticket.bought { background: #555 !important; color: #999 !important; pointer-events: none; }
+        .ticket.bought { background: #555 !important; color: #999 !important; pointer-events: none; border-color: #333; }
         .info { background: rgba(255,255,255,0.15); padding: 15px; border-radius: 15px; margin: 10px; }
         .prize { color: #ffd700; font-size: 1.3em; font-weight: bold; }
-        #adminBtn { display: none; margin-top: 30px; padding: 10px; background: red; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        #adminBtn { display: none; margin: 30px auto; padding: 12px 20px; background: #ff4444; color: white; border: 2px solid white; border-radius: 10px; font-weight: bold; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -27,14 +27,20 @@
     </div>
     <div class="ticket-container" id="tickets"></div>
 
-    <button id="adminBtn" onclick="localStorage.clear(); location.reload();">Скинути квитки (АДМІН)</button>
+    <button id="adminBtn" onclick="clearGame()">Скинути квитки (АДМІН)</button>
 
     <script>
         const wallet = "UQDXq1iAqu88tVRG62_k03kAXELu_1gzRBMye-VZoFRIRtWw";
         
-        // Показуємо адмін-кнопку завжди, якщо є ?admin
+        // Показуємо адмін-кнопку, якщо в посиланні є admin
         if (window.location.search.includes('admin')) {
-            document.getElementById('adminBtn').style.display = 'inline-block';
+            document.getElementById('adminBtn').style.display = 'block';
+        }
+
+        function clearGame() {
+            localStorage.clear();
+            alert("Квитки очищено!");
+            window.location.href = window.location.pathname; // Перезапуск без ?admin
         }
 
         for (let i = 1; i <= 5; i++) {
@@ -49,12 +55,16 @@
 
             t.onclick = function() {
                 const amount = 10000000; // 0.01 TON
-                // Універсальне посилання для вибору гаманця
-                const payLink = `https://tonkeeper.app/transfer/${wallet}?amount=${amount}&text=Ticket_${i}`;
+                // Використовуємо прямий шлюз Tonkeeper (найстабільніший для Telegram)
+                const payLink = `https://app.tonkeeper.com/transfer/${wallet}?amount=${amount}&text=Ticket_${i}`;
                 
-                window.location.href = payLink;
                 localStorage.setItem('ticket_' + i, 'true');
-                location.reload();
+                
+                // Спроба відкрити гаманець
+                window.location.assign(payLink);
+                
+                // Через секунду оновлюємо вигляд, щоб квиток став сірим
+                setTimeout(() => { location.reload(); }, 1000);
             };
             document.getElementById('tickets').appendChild(t);
         }
